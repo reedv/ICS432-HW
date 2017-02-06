@@ -1,0 +1,401 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 54.92      9.50     9.50   239436     0.00     0.00  svdcmp_d
+ 20.52     13.05     3.55   239436     0.00     0.00  void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float const&>(float const&)
+  6.07     14.10     1.05   239436     0.00     0.00  svdfit_d
+  3.53     14.71     0.61      735     0.00     0.02  GeneProcess::geneFrame(unsigned short*, float*)
+  2.92     15.22     0.51 11907000     0.00     0.00  suchi_utils::bb2temp(float, float)
+  2.83     15.71     0.49        1     0.49     0.49  suchi_offsets::resampleArray(unsigned short*, float, float, int)
+  1.79     16.02     0.31   239436     0.00     0.00  svbksb_d
+  1.68     16.31     0.29        1     0.29     0.88  GeneProcess::calcEmissivity()
+  1.65     16.59     0.29 191548800     0.00     0.00  poly3d(double, double*, int)
+  1.16     16.79     0.20   239436     0.00     0.00  suchi_utils::procColumn_noFFT(float*, float*, float, float, bool)
+  0.69     16.91     0.12        2     0.06     0.06  suchi_utils::flattenData(unsigned short*, float*, int, int, int)
+  0.46     16.99     0.08 11907144     0.00     0.00  suchi_utils::bb2rad(float, float)
+  0.46     17.07     0.08   239436     0.00     0.00  polyfit(double*, double*, int, int, double*, double*)
+  0.40     17.14     0.07   478872     0.00     0.00  dmatrix
+  0.35     17.20     0.06   239436     0.00     0.00  suchi_utils::remove3D(double*, int)
+  0.23     17.24     0.04        1     0.04    15.68  GeneProcess::processCube(suchi_offsets*)
+  0.20     17.28     0.04                             poly1d(double, double*, int)
+  0.06     17.29     0.01  1197180     0.00     0.00  dvector
+  0.06     17.30     0.01                             lvector
+  0.03     17.30     0.01                             suchi_utils::extractSegment(float*, float*, int, float, float)
+  0.00     17.30     0.00  1197180     0.00     0.00  free_dvector
+  0.00     17.30     0.00   478872     0.00     0.00  free_dmatrix
+  0.00     17.30     0.00     1296     0.00     0.00  suchi_utils::fftcallComplex(double*, double*, int, int)
+  0.00     17.30     0.00      648     0.00     0.00  GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.49]
+  0.00     17.30     0.00      648     0.00     0.00  GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.50]
+  0.00     17.30     0.00       11     0.00     0.00  void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float>(float&&)
+  0.00     17.30     0.00        2     0.00     0.04  GeneProcess::processBB()
+  0.00     17.30     0.00        2     0.00     0.00  void std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::_M_emplace_back_aux<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+  0.00     17.30     0.00        1     0.00     0.00  _GLOBAL__sub_I__ZN11GeneProcessC2Ev
+  0.00     17.30     0.00        1     0.00     0.00  _GLOBAL__sub_I__ZN11MainProcessC2Ev
+  0.00     17.30     0.00        1     0.00     0.00  _GLOBAL__sub_I__ZN13suchi_offsetsC2Ev
+  0.00     17.30     0.00        1     0.00     0.00  _GLOBAL__sub_I__ZN9CVProcessC2EPcS0_
+  0.00     17.30     0.00        1     0.00     0.00  _GLOBAL__sub_I_main
+  0.00     17.30     0.00        1     0.00     0.00  GeneProcess::setOutpref(char*)
+  0.00     17.30     0.00        1     0.00     0.00  GeneProcess::genBBCurves()
+  0.00     17.30     0.00        1     0.00     0.16  GeneProcess::readBBFiles(char*, char*, float, float)
+  0.00     17.30     0.00        1     0.00     0.00  GeneProcess::readWaveFile(char*)
+  0.00     17.30     0.00        1     0.00     0.00  GeneProcess::findWaveRange()
+  0.00     17.30     0.00        1     0.00     0.00  GeneProcess::readSegmentFile(char*)
+  0.00     17.30     0.00        1     0.00     0.00  GeneProcess::setSegParamsNew(float, float, int, bool)
+  0.00     17.30     0.00        1     0.00     0.00  GeneProcess::GeneProcess()
+  0.00     17.30     0.00        1     0.00     0.00  suchi_offsets::setOutprefix(char*)
+  0.00     17.30     0.00        1     0.00     0.00  suchi_offsets::suchi_offsets()
+  0.00     17.30     0.00        1     0.00     0.00  Wavecal::setStartStop(int, int, bool)
+  0.00     17.30     0.00        1     0.00     0.00  Wavecal::Wavecal()
+  0.00     17.30     0.00        1     0.00     0.00  SuchiFile::readSuchiData()
+  0.00     17.30     0.00        1     0.00     0.00  SuchiFile::SuchiFile(char const*)
+  0.00     17.30     0.00        1     0.00     0.00  save_png_to_file
+  0.00     17.30     0.00        1     0.00     0.00  write_png
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2015 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 0.06% of 17.30 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     99.7    0.00   17.25                 MainProcess::run() [1]
+                0.04   15.64       1/1           GeneProcess::processCube(suchi_offsets*) [2]
+                0.29    0.59       1/1           GeneProcess::calcEmissivity() [10]
+                0.49    0.00       1/1           suchi_offsets::resampleArray(unsigned short*, float, float, int) [12]
+                0.00    0.16       1/1           GeneProcess::readBBFiles(char*, char*, float, float) [15]
+                0.00    0.04       1/2           GeneProcess::processBB() [17]
+                0.00    0.00       1/1           GeneProcess::genBBCurves() [26]
+                0.00    0.00       1/1           SuchiFile::SuchiFile(char const*) [75]
+                0.00    0.00       1/1           SuchiFile::readSuchiData() [74]
+-----------------------------------------------
+                0.04   15.64       1/1           MainProcess::run() [1]
+[2]     90.7    0.04   15.64       1         GeneProcess::processCube(suchi_offsets*) [2]
+                0.61   15.03     735/735         GeneProcess::geneFrame(unsigned short*, float*) [3]
+                0.00    0.00       1/1           GeneProcess::findWaveRange() [66]
+                0.00    0.00       1/1           write_png [30]
+-----------------------------------------------
+                0.61   15.03     735/735         GeneProcess::processCube(suchi_offsets*) [2]
+[3]     90.4    0.61   15.03     735         GeneProcess::geneFrame(unsigned short*, float*) [3]
+                0.20   14.84  238140/239436      suchi_utils::procColumn_noFFT(float*, float*, float, float, bool) [4]
+-----------------------------------------------
+                0.00    0.04     648/239436      GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.50] [21]
+                0.00    0.04     648/239436      GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.49] [20]
+                0.20   14.84  238140/239436      GeneProcess::geneFrame(unsigned short*, float*) [3]
+[4]     87.4    0.20   14.92  239436         suchi_utils::procColumn_noFFT(float*, float*, float, float, bool) [4]
+                0.06   11.31  239436/239436      suchi_utils::remove3D(double*, int) [5]
+                3.55    0.00  239436/239436      void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float const&>(float const&) [9]
+-----------------------------------------------
+                0.06   11.31  239436/239436      suchi_utils::procColumn_noFFT(float*, float*, float, float, bool) [4]
+[5]     65.7    0.06   11.31  239436         suchi_utils::remove3D(double*, int) [5]
+                0.08   11.23  239436/239436      polyfit(double*, double*, int, int, double*, double*) [6]
+-----------------------------------------------
+                0.08   11.23  239436/239436      suchi_utils::remove3D(double*, int) [5]
+[6]     65.3    0.08   11.23  239436         polyfit(double*, double*, int, int, double*, double*) [6]
+                1.05   10.10  239436/239436      svdfit_d [7]
+                0.07    0.00  478872/478872      dmatrix [19]
+                0.00    0.00  239436/1197180     dvector [24]
+                0.00    0.00  478872/478872      free_dmatrix [28]
+                0.00    0.00  478872/1197180     free_dvector [27]
+-----------------------------------------------
+                1.05   10.10  239436/239436      polyfit(double*, double*, int, int, double*, double*) [6]
+[7]     64.5    1.05   10.10  239436         svdfit_d [7]
+                9.50    0.00  239436/239436      svdcmp_d [8]
+                0.31    0.00  239436/239436      svbksb_d [13]
+                0.29    0.00 191548800/191548800     poly3d(double, double*, int) [14]
+                0.00    0.00  478872/1197180     dvector [24]
+                0.00    0.00  718308/1197180     free_dvector [27]
+-----------------------------------------------
+                9.50    0.00  239436/239436      svdfit_d [7]
+[8]     54.9    9.50    0.00  239436         svdcmp_d [8]
+                0.00    0.00  239436/1197180     dvector [24]
+-----------------------------------------------
+                3.55    0.00  239436/239436      suchi_utils::procColumn_noFFT(float*, float*, float, float, bool) [4]
+[9]     20.5    3.55    0.00  239436         void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float const&>(float const&) [9]
+-----------------------------------------------
+                0.29    0.59       1/1           MainProcess::run() [1]
+[10]     5.1    0.29    0.59       1         GeneProcess::calcEmissivity() [10]
+                0.51    0.00 11907000/11907000     suchi_utils::bb2temp(float, float) [11]
+                0.08    0.00 11907000/11907144     suchi_utils::bb2rad(float, float) [18]
+-----------------------------------------------
+                0.51    0.00 11907000/11907000     GeneProcess::calcEmissivity() [10]
+[11]     2.9    0.51    0.00 11907000         suchi_utils::bb2temp(float, float) [11]
+-----------------------------------------------
+                0.49    0.00       1/1           MainProcess::run() [1]
+[12]     2.8    0.49    0.00       1         suchi_offsets::resampleArray(unsigned short*, float, float, int) [12]
+-----------------------------------------------
+                0.31    0.00  239436/239436      svdfit_d [7]
+[13]     1.8    0.31    0.00  239436         svbksb_d [13]
+                0.00    0.00  239436/1197180     dvector [24]
+-----------------------------------------------
+                0.29    0.00 191548800/191548800     svdfit_d [7]
+[14]     1.6    0.29    0.00 191548800         poly3d(double, double*, int) [14]
+-----------------------------------------------
+                0.00    0.16       1/1           MainProcess::run() [1]
+[15]     0.9    0.00    0.16       1         GeneProcess::readBBFiles(char*, char*, float, float) [15]
+                0.12    0.00       2/2           suchi_utils::flattenData(unsigned short*, float*, int, int, int) [16]
+                0.00    0.04       1/2           GeneProcess::processBB() [17]
+                0.00    0.00       2/11          void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float>(float&&) [57]
+                0.00    0.00       2/2           void std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::_M_emplace_back_aux<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&) [58]
+-----------------------------------------------
+                0.12    0.00       2/2           GeneProcess::readBBFiles(char*, char*, float, float) [15]
+[16]     0.7    0.12    0.00       2         suchi_utils::flattenData(unsigned short*, float*, int, int, int) [16]
+-----------------------------------------------
+                0.00    0.04       1/2           MainProcess::run() [1]
+                0.00    0.04       1/2           GeneProcess::readBBFiles(char*, char*, float, float) [15]
+[17]     0.5    0.00    0.08       2         GeneProcess::processBB() [17]
+                0.00    0.04     648/648         GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.49] [20]
+                0.00    0.04     648/648         GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.50] [21]
+                0.00    0.00    1296/1296        suchi_utils::fftcallComplex(double*, double*, int, int) [56]
+-----------------------------------------------
+                0.00    0.00     144/11907144     GeneProcess::genBBCurves() [26]
+                0.08    0.00 11907000/11907144     GeneProcess::calcEmissivity() [10]
+[18]     0.5    0.08    0.00 11907144         suchi_utils::bb2rad(float, float) [18]
+-----------------------------------------------
+                0.07    0.00  478872/478872      polyfit(double*, double*, int, int, double*, double*) [6]
+[19]     0.4    0.07    0.00  478872         dmatrix [19]
+-----------------------------------------------
+                0.00    0.04     648/648         GeneProcess::processBB() [17]
+[20]     0.2    0.00    0.04     648         GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.49] [20]
+                0.00    0.04     648/239436      suchi_utils::procColumn_noFFT(float*, float*, float, float, bool) [4]
+-----------------------------------------------
+                0.00    0.04     648/648         GeneProcess::processBB() [17]
+[21]     0.2    0.00    0.04     648         GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.50] [21]
+                0.00    0.04     648/239436      suchi_utils::procColumn_noFFT(float*, float*, float, float, bool) [4]
+-----------------------------------------------
+                                                 <spontaneous>
+[22]     0.2    0.04    0.00                 poly1d(double, double*, int) [22]
+-----------------------------------------------
+                                                 <spontaneous>
+[23]     0.1    0.01    0.00                 lvector [23]
+-----------------------------------------------
+                0.00    0.00  239436/1197180     polyfit(double*, double*, int, int, double*, double*) [6]
+                0.00    0.00  239436/1197180     svbksb_d [13]
+                0.00    0.00  239436/1197180     svdcmp_d [8]
+                0.00    0.00  478872/1197180     svdfit_d [7]
+[24]     0.1    0.01    0.00 1197180         dvector [24]
+-----------------------------------------------
+                                                 <spontaneous>
+[25]     0.0    0.01    0.00                 suchi_utils::extractSegment(float*, float*, int, float, float) [25]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::run() [1]
+[26]     0.0    0.00    0.00       1         GeneProcess::genBBCurves() [26]
+                0.00    0.00     144/11907144     suchi_utils::bb2rad(float, float) [18]
+-----------------------------------------------
+                0.00    0.00  478872/1197180     polyfit(double*, double*, int, int, double*, double*) [6]
+                0.00    0.00  718308/1197180     svdfit_d [7]
+[27]     0.0    0.00    0.00 1197180         free_dvector [27]
+-----------------------------------------------
+                0.00    0.00  478872/478872      polyfit(double*, double*, int, int, double*, double*) [6]
+[28]     0.0    0.00    0.00  478872         free_dmatrix [28]
+-----------------------------------------------
+                0.00    0.00       1/1           write_png [30]
+[29]     0.0    0.00    0.00       1         save_png_to_file [29]
+-----------------------------------------------
+                0.00    0.00       1/1           GeneProcess::processCube(suchi_offsets*) [2]
+[30]     0.0    0.00    0.00       1         write_png [30]
+                0.00    0.00       1/1           save_png_to_file [29]
+-----------------------------------------------
+                0.00    0.00    1296/1296        GeneProcess::processBB() [17]
+[56]     0.0    0.00    0.00    1296         suchi_utils::fftcallComplex(double*, double*, int, int) [56]
+-----------------------------------------------
+                0.00    0.00       2/11          GeneProcess::readBBFiles(char*, char*, float, float) [15]
+                0.00    0.00       9/11          MainProcess::readProcessFile(char*) [90]
+[57]     0.0    0.00    0.00      11         void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float>(float&&) [57]
+-----------------------------------------------
+                0.00    0.00       2/2           GeneProcess::readBBFiles(char*, char*, float, float) [15]
+[58]     0.0    0.00    0.00       2         void std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::_M_emplace_back_aux<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&) [58]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [146]
+[59]     0.0    0.00    0.00       1         _GLOBAL__sub_I__ZN11GeneProcessC2Ev [59]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [146]
+[60]     0.0    0.00    0.00       1         _GLOBAL__sub_I__ZN11MainProcessC2Ev [60]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [146]
+[61]     0.0    0.00    0.00       1         _GLOBAL__sub_I__ZN13suchi_offsetsC2Ev [61]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [146]
+[62]     0.0    0.00    0.00       1         _GLOBAL__sub_I__ZN9CVProcessC2EPcS0_ [62]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [146]
+[63]     0.0    0.00    0.00       1         _GLOBAL__sub_I_main [63]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::readProcessFile(char*) [90]
+[64]     0.0    0.00    0.00       1         GeneProcess::setOutpref(char*) [64]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::readProcessFile(char*) [90]
+[65]     0.0    0.00    0.00       1         GeneProcess::readWaveFile(char*) [65]
+-----------------------------------------------
+                0.00    0.00       1/1           GeneProcess::processCube(suchi_offsets*) [2]
+[66]     0.0    0.00    0.00       1         GeneProcess::findWaveRange() [66]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::readProcessFile(char*) [90]
+[67]     0.0    0.00    0.00       1         GeneProcess::readSegmentFile(char*) [67]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::readProcessFile(char*) [90]
+[68]     0.0    0.00    0.00       1         GeneProcess::setSegParamsNew(float, float, int, bool) [68]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::MainProcess() [91]
+[69]     0.0    0.00    0.00       1         GeneProcess::GeneProcess() [69]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::readProcessFile(char*) [90]
+[70]     0.0    0.00    0.00       1         suchi_offsets::setOutprefix(char*) [70]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::MainProcess() [91]
+[71]     0.0    0.00    0.00       1         suchi_offsets::suchi_offsets() [71]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::readProcessFile(char*) [90]
+[72]     0.0    0.00    0.00       1         Wavecal::setStartStop(int, int, bool) [72]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::MainProcess() [91]
+[73]     0.0    0.00    0.00       1         Wavecal::Wavecal() [73]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::run() [1]
+[74]     0.0    0.00    0.00       1         SuchiFile::readSuchiData() [74]
+-----------------------------------------------
+                0.00    0.00       1/1           MainProcess::run() [1]
+[75]     0.0    0.00    0.00       1         SuchiFile::SuchiFile(char const*) [75]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2015 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+  [59] _GLOBAL__sub_I__ZN11GeneProcessC2Ev [20] GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.49] [74] SuchiFile::readSuchiData()
+  [60] _GLOBAL__sub_I__ZN11MainProcessC2Ev [21] GeneProcess::getProfileSegmented(int, float*, int*, int) [clone .constprop.50] [75] SuchiFile::SuchiFile(char const*)
+  [61] _GLOBAL__sub_I__ZN13suchi_offsetsC2Ev [3] GeneProcess::geneFrame(unsigned short*, float*) [58] void std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::_M_emplace_back_aux<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+  [62] _GLOBAL__sub_I__ZN9CVProcessC2EPcS0_ [17] GeneProcess::processBB() [57] void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float>(float&&)
+  [63] _GLOBAL__sub_I_main    [69] GeneProcess::GeneProcess() [9] void std::vector<float, std::allocator<float> >::_M_emplace_back_aux<float const&>(float const&)
+  [22] poly1d(double, double*, int) [16] suchi_utils::flattenData(unsigned short*, float*, int, int, int) [19] dmatrix
+  [14] poly3d(double, double*, int) [25] suchi_utils::extractSegment(float*, float*, int, float, float) [24] dvector
+   [6] polyfit(double*, double*, int, int, double*, double*) [56] suchi_utils::fftcallComplex(double*, double*, int, int) [28] free_dmatrix
+  [64] GeneProcess::setOutpref(char*) [4] suchi_utils::procColumn_noFFT(float*, float*, float, float, bool) [27] free_dvector
+  [26] GeneProcess::genBBCurves() [18] suchi_utils::bb2rad(float, float) [23] lvector
+   [2] GeneProcess::processCube(suchi_offsets*) [11] suchi_utils::bb2temp(float, float) [29] save_png_to_file
+  [15] GeneProcess::readBBFiles(char*, char*, float, float) [5] suchi_utils::remove3D(double*, int) [13] svbksb_d
+  [65] GeneProcess::readWaveFile(char*) [70] suchi_offsets::setOutprefix(char*) [8] svdcmp_d
+  [66] GeneProcess::findWaveRange() [12] suchi_offsets::resampleArray(unsigned short*, float, float, int) [7] svdfit_d
+  [10] GeneProcess::calcEmissivity() [71] suchi_offsets::suchi_offsets() [30] write_png
+  [67] GeneProcess::readSegmentFile(char*) [72] Wavecal::setStartStop(int, int, bool)
+  [68] GeneProcess::setSegParamsNew(float, float, int, bool) [73] Wavecal::Wavecal()
