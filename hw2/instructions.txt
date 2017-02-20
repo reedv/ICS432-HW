@@ -52,6 +52,8 @@ Question #2 [5pts]: Playing Music
 
 Question #3 [10pts]: Playing Music with a Thread
 	To avoid the frozen GUI problem, when the “Play Music” button is pressed have your program start a thread that plays the WAV file. Make sure you can interact with the GUI while the music is playing.
-Question #4 [5pts]: No Wild Mixes
 
-Your implementation will make it possible to play multiple WAV files at the same time (or the same file multiple times), which can be interesting but likely undesirable. Modify your program so that only a single file can be played at a time. Rather than disabling the “Play Music” button, leave it always enabled, but if the user attempts to play a file while music is already playing, then your program should still pop up the FileChooser, but simply print “Music is already playing!” to System.out is the user actually selects a file. This way, the user can bring up the popup and look for files to play while music is playing.
+
+
+Question #4 [5pts]: No Wild Mixes
+	Your implementation will make it possible to play multiple WAV files at the same time (or the same file multiple times), which can be interesting but likely undesirable. Modify your program so that only a single file can be played at a time. Rather than disabling the “Play Music” button, leave it always enabled, but if the user attempts to play a file while music is already playing, then your program should still pop up the FileChooser, but simply print “Music is already playing!” to System.out if the user actually selects a file. This way, the user can bring up the popup and look for files to play while music is playing.
