@@ -1,28 +1,21 @@
-/*
- * coffeeshop.c
- *
- *  Created on: Mar 2, 2017
- *      Author: reedvilanueva
- */
-
 #include <stdio.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 
 
 //lock and condition variables
-//pthread_mutex_t key_rack;
-//pthread_cond_t key_available;
+pthread_mutex_t key_rack, bathroom_1, bathroom_2;
+pthread_cond_t key_available;
+sem_t keys;
 
 typedef struct ArgsStruct {
 	int id;
 	int iterations;
 	int max_usleep;
 	int *keys;
-	pthread_mutex_t *key_rack;
-	pthread_cond_t *key_available;
 } ArgsStruct;
 
 
@@ -56,8 +49,6 @@ void *customer_worker (void *args_struct) {
 	int iterations = args->iterations;
 	int max = args->max_usleep;
 	int *keys = args->keys;
-	pthread_mutex_t *key_rack = args->key_rack;
-	pthread_cond_t *key_available = args->key_available;
 
 	printf("Thread %d enters the coffee shop\n", id);
 
@@ -70,12 +61,12 @@ void *customer_worker (void *args_struct) {
 
 		// get a key
 		printf("Thread %d is going to the bathroom\n", id);
-		pthread_mutex_lock(key_rack);
+		pthread_mutex_lock(&key_rack);
 		while (*keys == 0) {
-			pthread_cond_wait(key_available, key_rack);
+			pthread_cond_wait(&key_available, &key_rack);
 		}
 		(*keys)--;
-		pthread_mutex_unlock(key_rack);
+		pthread_mutex_unlock(&key_rack);
 		printf("Thread %d got a key\n", id);
 
 		// use bathroom
@@ -83,11 +74,11 @@ void *customer_worker (void *args_struct) {
 		rand_sleep(0, max);
 
 		// return key
-		pthread_mutex_lock(key_rack);
+		pthread_mutex_lock(&key_rack);
 		(*keys)++;
 		printf("Thread %d put a key back on the board\n", id);
-		pthread_cond_signal(key_available);
-		pthread_mutex_unlock(key_rack);
+		pthread_cond_signal(&key_available);
+		pthread_mutex_unlock(&key_rack);
 	}
 
 	printf("Thread %d leaves the coffee shop\n", id);
@@ -129,9 +120,6 @@ int main(int argc, char **argv) {
 	// seed rng
 	srand(seed);
 
-	//lock and condition variables
-	pthread_mutex_t key_rack;
-	pthread_cond_t key_available;
 	pthread_mutex_init(&key_rack, NULL);
 	pthread_cond_init(&key_available, NULL);
 
@@ -145,8 +133,6 @@ int main(int argc, char **argv) {
 		args->iterations = iterations;
 		args->max_usleep = max_usleep;
 		args->keys = &key_count;
-		args->key_rack = &key_rack;
-		args->key_available = &key_available;
 
 		if ( pthread_create(&(customer_threads[i]), NULL, customer_worker, (void *)args) ) {
 			fprintf(stderr,"Error while creating thread (id=%d)\n", args->id);
