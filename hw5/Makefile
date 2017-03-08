@@ -3,6 +3,9 @@ CFLAGS = -Wall -lpthread
 
 all: coffeeshop coffeeshop_semaphore
 
+clean: 
+	rm coffeeshop coffeeshop_semaphore
+
 coffeeshop:
 	$(CC) $(CFLAGS) -o coffeeshop coffeeshop.c
 coffeeshop_semaphore:
