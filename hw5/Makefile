@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -lpthread
+CFLAGS = -Wall -pthread
 
 all: coffeeshop coffeeshop_semaphore
 
