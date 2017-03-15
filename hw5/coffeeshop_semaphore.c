@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
 	// init resouce/key counting semaphore
 	sem_t key_rack;
 	if(sem_init(&key_rack, 0, key_count) < 0){
-		fprintf(stderr,"Error while creating semaphore. Function sem_inti() not supported on osx\n");
+		fprintf(stderr,"Error while creating semaphore. Function sem_inti() not supported on osx, use Linux\n");
 		exit(1);
 	}
 
