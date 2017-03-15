@@ -58,4 +58,7 @@
 hs_err_pid*
 
 # intellij
-.idea
+*.idea
+
+*.jpg
+*.png
