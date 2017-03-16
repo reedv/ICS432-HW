@@ -21,6 +21,9 @@ public class SequentialImageProcessor {
   }
 
   private void sequentialImageProcessor(String args[]) {
+    double timeDelta = 0, readTime = 0, processTime = 0, writeTime = 0, totalTime = 0;
+    totalTime = System.currentTimeMillis();
+
     String filterName = "", imagePath = "";
     BufferedImageOp filter = null;
 
@@ -45,49 +48,70 @@ public class SequentialImageProcessor {
     }
 
     // read in image files to process
+    readTime = System.currentTimeMillis();
     ArrayList<File> images = getFiles(imagePath);
+    readTime = (System.currentTimeMillis() - readTime) / 1000;
 
     // process all images using specified filter
     if (filterName.startsWith("oil")){
       for (File img : images) {
-        BufferedImage input = null;
-        try {
-          input = ImageIO.read(img);
-        } catch (IOException e) {
-          System.out.println("Cannot read file " + img.getName());
-        }
-
+        // set input args
+        BufferedImage input = file2BufferedImage(img);
         BufferedImage output = null;
+        int range = Character.getNumericValue(filterName.charAt(3));
         String outputNameSuffix = img.getName();
-        oilFilter(filter, input, output, outputNameSuffix, Character.getNumericValue(filterName.charAt(3)));
+
+        // filter and record time
+        timeDelta = System.currentTimeMillis();
+        output = oilFilter(filter, input, output, range);
+        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
+
+        // write file and record time
+        timeDelta = System.currentTimeMillis();
+        saveImage(output, "./oil" + range + "_" + outputNameSuffix + ".jpg");
+        writeTime += (System.currentTimeMillis() - timeDelta) / 1000;
       }
     } else if (filterName.equals("invert")) {
       for (File img : images) {
-        BufferedImage input = null;
-        try {
-          input = ImageIO.read(img);
-        } catch (IOException e) {
-          System.out.println("Cannot read file " + img.getName());
-        }
-
+        // set input args
+        BufferedImage input = file2BufferedImage(img);
         BufferedImage output = null;
         String outputNameSuffix = img.getName();
-        invertFilter(filter, input, output, outputNameSuffix);
+
+        // filter and record time
+        timeDelta = System.currentTimeMillis();
+        output = invertFilter(filter, input, output);
+        processTime += (System.currentTimeMillis() - processTime) /1000;
+
+        // write file and record time
+        timeDelta = System.currentTimeMillis();
+        saveImage(output, "./invert_" + outputNameSuffix + ".jpg");
+        writeTime += (System.currentTimeMillis() - timeDelta) / 1000;
       }
     } else if (filterName.equals("smear")) {
       for (File img : images) {
-        BufferedImage input = null;
-        try {
-          input = ImageIO.read(img);
-        } catch (IOException e) {
-          System.out.println("Cannot read file " + img.getName());
-        }
-
+        // set input args
+        BufferedImage input = file2BufferedImage(img);
         BufferedImage output = null;
         String outputNameSuffix = img.getName();
-        smearFilter(filter, input, output, outputNameSuffix, 10);
+
+        // filter and record time
+        timeDelta = System.currentTimeMillis();
+        output = smearFilter(filter, input, output, 10);
+        processTime += (System.currentTimeMillis() - processTime) / 1000;
+
+        // write file and record time
+        timeDelta = System.currentTimeMillis();
+        saveImage(output, "./smear_" + outputNameSuffix + ".jpg");
+        writeTime += (System.currentTimeMillis() - timeDelta) / 1000;
       }
     }
+
+    totalTime = (System.currentTimeMillis() - totalTime) / 1000;
+    System.out.println("\nTime spent reading: "+ readTime +" sec.");
+    System.out.println("Time spent processing: "+ processTime +" sec.");
+    System.out.println("Time spent writing: "+ writeTime +" sec.");
+    System.out.println("Overall execution time: "+ totalTime +" sec.");
   }
 
   /*
@@ -113,48 +137,65 @@ public class SequentialImageProcessor {
     return files;
   }
 
-  private void oilFilter(BufferedImageOp filter, BufferedImage input, BufferedImage output, String outNameSuff, int range) {
+  private BufferedImage file2BufferedImage(File file) {
+    BufferedImage buffOut = null;
+    try {
+      buffOut = ImageIO.read(file);
+    } catch (IOException e) {
+      System.out.println("Cannot read file " + file.getName());
+      return null;
+    }
+
+    return buffOut;
+  }
+
+  private BufferedImage oilFilter(BufferedImageOp filter,
+                         BufferedImage input, BufferedImage output,
+                         int range) {
     // init. output image
     output = new BufferedImage(input.getWidth(), input.getHeight(), input.getType());
 
     // Apply the Oil1 filter and save image
     filter = new OilFilter();
     ((OilFilter)filter).setRange(range);
-    filter.filter(input,output);
+    filter.filter(input, output);
 
     // indicate that file has been processed
     System.out.print("p");
 
-    saveImage(output, "./oil" + range + "_" + outNameSuff + ".jpg");
+    return output;
   }
 
-  private void invertFilter(BufferedImageOp filter, BufferedImage input, BufferedImage output, String outNameSuff) {
+  private BufferedImage invertFilter(BufferedImageOp filter,
+                                     BufferedImage input, BufferedImage output) {
     // init. output image
     output = new BufferedImage(input.getWidth(), input.getHeight(), input.getType());
 
     // Apply the Invert filter
     filter = new InvertFilter();
-    filter.filter(input,output);
+    filter.filter(input, output);
 
     // indicate that file has been processed
     System.out.print("p");
 
-    saveImage(output, "./invert_" + outNameSuff + ".jpg");
+    return output;
   }
 
-  private void smearFilter(BufferedImageOp filter, BufferedImage input, BufferedImage output, String outNameSuff, int shape) {
+  private BufferedImage smearFilter(BufferedImageOp filter,
+                                    BufferedImage input, BufferedImage output,
+                                    int shape) {
     // init. output image
     output = new BufferedImage(input.getWidth(), input.getHeight(), input.getType());
 
     // Apply the Smear filter
     filter = new SmearFilter();
     ((SmearFilter)filter).setShape(shape);
-    filter.filter(input,output);
+    filter.filter(input, output);
 
     // indicate that file has been processed
     System.out.print("p");
 
-    saveImage(output, "./smear_" + outNameSuff + ".jpg");
+    return output;
   }
 
   private void saveImage(BufferedImage image, String filename) {
