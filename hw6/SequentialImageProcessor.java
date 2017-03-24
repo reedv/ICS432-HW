@@ -25,7 +25,6 @@ public class SequentialImageProcessor {
     totalTime = System.currentTimeMillis();
 
     String filterName = "", imagePath = "";
-    BufferedImageOp filter = null;
 
     // init. input args
     try
@@ -40,23 +39,27 @@ public class SequentialImageProcessor {
     }
 
     // check for valid filter option
-    if (!filterName.startsWith("oil") && filterName.equals("invert") && filterName.equals("smear")) {
+    if (!filterName.equals("oil1") && !filterName.equals("oil3") &&
+        !filterName.equals("invert") &&
+        !filterName.equals("smear")) {
       System.out.println(filterName + " is not a valid filter name.\n" +
                          "Valid filter names:\n" +
-                         "oil<single digit int>, invert, smear\n");
+                         "oil1, oil3, invert, smear\n");
       System.exit(0);
     }
 
-    // read in image files to process
-    readTime = System.currentTimeMillis();
+    // get image files to be read
     ArrayList<File> images = getFiles(imagePath);
-    readTime = (System.currentTimeMillis() - readTime) / 1000;
 
+    BufferedImageOp filter = null;
     // process all images using specified filter
     if (filterName.startsWith("oil")){
       for (File img : images) {
-        // set input args
+        // read image and record time
+        timeDelta = System.currentTimeMillis();
         BufferedImage input = file2BufferedImage(img);
+        readTime += (System.currentTimeMillis() - readTime) / 1000;
+
         BufferedImage output = null;
         int range = Character.getNumericValue(filterName.charAt(3));
         String outputNameSuffix = img.getName();
@@ -73,8 +76,11 @@ public class SequentialImageProcessor {
       }
     } else if (filterName.equals("invert")) {
       for (File img : images) {
-        // set input args
+        // read image and record time
+        timeDelta = System.currentTimeMillis();
         BufferedImage input = file2BufferedImage(img);
+        readTime += (System.currentTimeMillis() - readTime) / 1000;
+
         BufferedImage output = null;
         String outputNameSuffix = img.getName();
 
@@ -90,8 +96,11 @@ public class SequentialImageProcessor {
       }
     } else if (filterName.equals("smear")) {
       for (File img : images) {
-        // set input args
+        // read image and record time
+        timeDelta = System.currentTimeMillis();
         BufferedImage input = file2BufferedImage(img);
+        readTime += (System.currentTimeMillis() - readTime) / 1000;
+
         BufferedImage output = null;
         String outputNameSuffix = img.getName();
 
@@ -125,9 +134,6 @@ public class SequentialImageProcessor {
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(path, "image_*.jpg")) {
       for (Path p : dirStream) {
         files.add(p.toFile());
-
-        // indicate that file has been read
-        System.out.print("r");
       }
     } catch (IOException e) {
       System.err.println(e);
@@ -140,7 +146,10 @@ public class SequentialImageProcessor {
   private BufferedImage file2BufferedImage(File file) {
     BufferedImage buffOut = null;
     try {
+      // read in File to BufferedImage
       buffOut = ImageIO.read(file);
+      // indicate that file has been read
+      System.out.print("r");
     } catch (IOException e) {
       System.out.println("Cannot read file " + file.getName());
       return null;

@@ -14,6 +14,13 @@ Answer #1:
 	lock(mutex): 	9-10,  25-26
 	unlock(mutex): 18-19, 38-39
 
+	Correction:
+	lock(mutex): 	9-10, 25-26
+    	unlock(mutex): 13-14, 18-19, 
+			29-30, 34-35, 38-39
+			(need to release locks in FAILURE cases 
+			and can't do unlocks _after_ a return statement)
+
 
 
 
@@ -38,7 +45,7 @@ class OpenHashMap {
   public static Status move(HashMap src, HashMap dst, KeyValuePair pair) {
     Status result;
     lock(move_mutex);
-    result = src.delete(pair); 
+    result = src.delete(pair);  // ERR: while others can't move(), can still lookup()
     if (result == SUCCESS) {
        result = dst.insert(pair);
     }
@@ -49,7 +56,7 @@ class OpenHashMap {
 Explain why the above does not fix the “each thread sees each pair in exactly one hashmap” semantic described in the previous section? Give a simple scenario that breaks the semantic.
 
 Answer #2:
-	This implementation does not allow the above semantic because…
+	Uses accessing method while allowing other threads to access from other methods: This implementation does not allow the above semantic because…
 		* suppose thread t1 calls move(src=map1, dst=map2, pair=p)
 		* and suppose that after the 'src.delete.(p)' the cpu context switches to another thread t2.
 		* t2 calls either map1.lookup(p) or map2.lookup(p). In either case, t2 will not be able to find p because t1 has yet to finish (p has effectively disappeared).
@@ -68,8 +75,8 @@ Question #3: Fixing it? [10pts]
 Explain how you would fix the problem in the previous question by modifying all other methods in the HashMap implementation. This should lead to a perfectly correct implementation that respects the desired semantic.
 
 Answer #3:
-	The problem with the move implementation is that on a high level we expect the move operation to be atomic so that at any point, no matter when a context switch has happened, the item p in move(src, dst, p) has either been moved or it has not (ie. is not in some intermediate state of being in the process of being moved). Thus we need to disallow the intermediate operations that comprise a move() operation from being called by other threads while a move is happening for a particular pair of hashmaps.
-	The way to model this kind of atomic behavior would be to place lock(move_mutex) and unlock(move_mutex) pairs at the beginning and ends of all of the other accessing methods (insert(), delete(), and lookup()). 
+	The problem with the move implementation is that on a high level we expect the move operation to be atomic so that at any point, no matter when a context switch has happened, the item p in move(src, dst, p) has either been moved or it has not (ie. is not in some intermediate state of being in the process of being moved). Thus we need to disallow the intermediate operations _that comprise a move() operation_ from being called by other threads while a move is happening for a particular pair of hashmaps.
+	The way to model this kind of atomic behavior would be to place lock(move_mutex) and unlock(move_mutex) pairs at the beginning and ends _of all of the other accessing methods_ (insert(), delete(), and lookup()). 
 
 
 
@@ -79,7 +86,7 @@ Question #4: Not so easy after all? [10pts]
 Given your fix in the previous question, describe why your implementation leads to low performance. More precisely, give a scenario in which your implementation limits concurrency too much.
 
 Answer #4:
-	The fix given in answer#3 leads to low performance because the use of the move() operation on any src-dst pair of hashmaps locks down the use of those hashmaps by any other threads.
+	Everything serialized while a move() is executing: The fix given in answer#3 leads to low performance because the use of the move() operation on any src-dst pair of hashmaps locks down the use of those hashmaps by any other threads.
 		* suppose t1 calls move(map1, map2, p1)
 		* at the very start of the method, the cpu context switches to t2
 		* t2 calls map1.lookup(p2). 
