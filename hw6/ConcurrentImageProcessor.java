@@ -52,17 +52,26 @@ public class ConcurrentImageProcessor {
    */
   private volatile FileNamePair[] imgsToWrite;
   private volatile int currentImgToWrite;
+  
+  /**
+   * poison pill set by reader worker to signal all threads finish up
+   */
+  private boolean allFilesRead;
 
 
   public ConcurrentImageProcessor() {
+	allFilesRead = false;  
+	  
     freeFilters = new Semaphore(prodconLimit);
     filledFilters = new Semaphore(0);
+    readerFilterMutex = new ReentrantLock();
     // init filters' resource buffer
     imgsToFilter = new FileNamePair[prodconLimit];
     currentImgToFilter = -1;
 
     freeWriters = new Semaphore(prodconLimit);
     filledWriters = new Semaphore(0);
+    filterWriterMutex = new ReentrantLock();
     // init writers' resource buffer
     imgsToWrite = new FileNamePair[prodconLimit];
     currentImgToWrite = -1;
@@ -158,10 +167,13 @@ public class ConcurrentImageProcessor {
   }
 
 
-  /*********************
+  /*******************************
    * ProdCon Threads
-   ********************/
+   *******************************/
 
+  /*********************
+   * reader worker
+   ********************/
   class Reader_t extends Thread {
 	/**
 	 * list of all files that need to be read
@@ -188,8 +200,8 @@ public class ConcurrentImageProcessor {
 				
 				// add read image and name to filter buffer
 				currentImgToFilter++;
-				imgsToFilter[currentImgToFilter].image = buffOut;
-				imgsToFilter[currentImgToFilter].imageName = img.getName();
+				FileNamePair toProcess = new FileNamePair(buffOut, img.getName());
+				imgsToFilter[currentImgToFilter] = toProcess;
 		    
 				// remove image from waiting queue
 				files.remove(0);
@@ -197,11 +209,14 @@ public class ConcurrentImageProcessor {
 				readerFilterMutex.unlock();
 				filledFilters.release();
 		    }
-			// send poison pill when all files read
 			
+			// set poison pill when all files read
+			allFilesRead = true;
 	    } catch (InterruptedException e) {
 
 	    }
+		
+		System.out.println("Reader thread exiting: " + Thread.currentThread().getId());
     }	
 
     private BufferedImage file2BufferedImage(File file) {
@@ -221,6 +236,9 @@ public class ConcurrentImageProcessor {
   }
 
   
+  /*********************
+   * image processor worker
+   ********************/
   class Filter_t extends Thread {
 	/**
 	 * name of the filter to be used
@@ -234,7 +252,7 @@ public class ConcurrentImageProcessor {
     }
 
     public void run() {
-    	while (true) {
+    	while (!allFilesRead || currentImgToFilter > -1) {
     		try {
     			filledFilters.acquire();
     			readerFilterMutex.lock();
@@ -277,12 +295,12 @@ public class ConcurrentImageProcessor {
 			    }
 
     			// pass image onto writers
-    			freeFilters.acquire();
+    			freeWriters.acquire();
     			filterWriterMutex.lock();
     			
     			currentImgToWrite++;
-    			imgsToWrite[currentImgToWrite].image = output;
-    			imgsToWrite[currentImgToWrite].imageName = outputName;
+    			FileNamePair toWrite = new FileNamePair(output, outputName);
+    			imgsToWrite[currentImgToWrite] = toWrite;
     			
     			filterWriterMutex.unlock();
     			filledWriters.release();
@@ -290,6 +308,8 @@ public class ConcurrentImageProcessor {
     			break;
     		}
     	}
+    	
+    	System.out.println("Filter thread exiting: " + Thread.currentThread().getId());
 	}
     
     private BufferedImage oilFilter(BufferedImageOp filter,
@@ -344,6 +364,9 @@ public class ConcurrentImageProcessor {
   }
 
   
+  /*********************
+   * writer worker
+   ********************/
   class Writer_t extends Thread {
 	  private double timeDelta = 0;
 	  public Writer_t() {
@@ -351,7 +374,7 @@ public class ConcurrentImageProcessor {
 	  }
 
 	  public void run() {
-		  while (true) {
+		  while (!allFilesRead || currentImgToWrite > -1) {
 			  try {
 				  filledWriters.acquire();
 				  filterWriterMutex.lock();
@@ -359,6 +382,7 @@ public class ConcurrentImageProcessor {
 				  // get next image from buffer to write
 				  BufferedImage img = imgsToWrite[currentImgToWrite].image;
 				  String name = imgsToWrite[currentImgToWrite].imageName;
+				  currentImgToWrite--;
           
 				  filterWriterMutex.unlock();
 				  freeWriters.release();
@@ -371,6 +395,8 @@ public class ConcurrentImageProcessor {
 				  break;
 			  }
 		  }
+		  
+		  System.out.println("Writer thread exiting: " + Thread.currentThread().getId());
 	  }
     
     private void saveImage(BufferedImage image, String filename, String formatName) {
