@@ -26,6 +26,12 @@ Q2:
 		Time spent writing: 6.432000000000001 sec.
 		Overall execution time: 23.282 sec.
 
+	IO intensiveness ranking ((read time + write time) / processing time):
+	1.
+	2.	
+	3.
+	4. 
+
 Q3:
 Q4:
 	oil1:
@@ -48,3 +54,9 @@ Q4:
 		Cumulative time spent processing: 8.685809944683267E10 sec.
 		Cumulative spent writing: 7.72 sec.
 		Overall execution time: 15.594 sec.
+
+	IO intensiveness ranking ((read time + write time) / processing time):
+	1.
+	2.	
+	3.
+	4.

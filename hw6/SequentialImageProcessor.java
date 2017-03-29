@@ -1,6 +1,8 @@
 import java.io.*;
 import java.awt.image.*;
+
 import javax.imageio.*;
+
 import com.jhlabs.image.*;
 
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import javax.imageio.ImageIO;
 
 public class SequentialImageProcessor {
@@ -58,7 +61,7 @@ public class SequentialImageProcessor {
         // read image and record time
         timeDelta = System.currentTimeMillis();
         BufferedImage input = file2BufferedImage(img);
-        readTime += (System.currentTimeMillis() - readTime) / 1000;
+        readTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
         BufferedImage output = null;
         int range = Character.getNumericValue(filterName.charAt(3));
@@ -80,7 +83,7 @@ public class SequentialImageProcessor {
         // read image and record time
         timeDelta = System.currentTimeMillis();
         BufferedImage input = file2BufferedImage(img);
-        readTime += (System.currentTimeMillis() - readTime) / 1000;
+        readTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
         BufferedImage output = null;
         String outputNameSuffix = removeFilenameExt(img.getName());
@@ -88,7 +91,7 @@ public class SequentialImageProcessor {
         // filter and record time
         timeDelta = System.currentTimeMillis();
         output = invertFilter(filter, input, output);
-        processTime += (System.currentTimeMillis() - processTime) /1000;
+        processTime += (System.currentTimeMillis() - timeDelta) /1000;
 
         // write file and record time
         timeDelta = System.currentTimeMillis();
@@ -100,7 +103,7 @@ public class SequentialImageProcessor {
         // read image and record time
         timeDelta = System.currentTimeMillis();
         BufferedImage input = file2BufferedImage(img);
-        readTime += (System.currentTimeMillis() - readTime) / 1000;
+        readTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
         BufferedImage output = null;
         String outputNameSuffix = removeFilenameExt(img.getName());
@@ -108,7 +111,7 @@ public class SequentialImageProcessor {
         // filter and record time
         timeDelta = System.currentTimeMillis();
         output = smearFilter(filter, input, output, 10);
-        processTime += (System.currentTimeMillis() - processTime) / 1000;
+        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
         // write file and record time
         timeDelta = System.currentTimeMillis();
@@ -122,6 +125,7 @@ public class SequentialImageProcessor {
     System.out.println("Time spent processing: "+ processTime +" sec.");
     System.out.println("Time spent writing: "+ writeTime +" sec.");
     System.out.println("Overall execution time: "+ totalTime +" sec.");
+    System.out.println("IO intensivness: " + (readTime + writeTime) / processTime);
   }
 
   /*

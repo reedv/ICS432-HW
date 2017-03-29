@@ -146,6 +146,7 @@ public class ConcurrentImageProcessor {
     System.out.println("Cumulative time spent processing: "+ processTime +" sec.");
     System.out.println("Cumulative spent writing: "+ writeTime +" sec.");
     System.out.println("Overall execution time: "+ totalTime +" sec.");
+    System.out.println("IO intensivness: " + (readTime + writeTime) / processTime);
 
   }
 
@@ -200,7 +201,7 @@ public class ConcurrentImageProcessor {
 				File img = files.remove(0);  
 				timeDelta = System.currentTimeMillis();
 				BufferedImage buffOut = file2BufferedImage(img);
-				readTime += (System.currentTimeMillis() - readTime) / 1000;
+				readTime += (System.currentTimeMillis() - timeDelta) / 1000;
 				
 				// add read image and name to filter buffer
 				currentImgToFilter++;
@@ -315,14 +316,14 @@ public class ConcurrentImageProcessor {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = invertFilter(filter, input, output);
-			        processTime += (System.currentTimeMillis() - processTime) /1000;
+			        processTime += (System.currentTimeMillis() - timeDelta) /1000;
 
 			        outputName = "./invert_" + outputNameSuffix;
 			    } else if (filterName.equals("smear")) {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = smearFilter(filter, input, output, 10);
-			        processTime += (System.currentTimeMillis() - processTime) / 1000;
+			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
 			        outputName = "./smear_" + outputNameSuffix;
 			    }
