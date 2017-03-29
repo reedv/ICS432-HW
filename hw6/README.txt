@@ -42,4 +42,3 @@ Q4:
 		
 	smear:
 
-BUG: When processing threads try to acquire from filledFilters sem. and end up going to sleep, if reader has already finished and other filters have taken the items to be processed, then this sleeping thread stays alseep and never wakes back up.

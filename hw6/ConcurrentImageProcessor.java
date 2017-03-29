@@ -27,9 +27,13 @@ public class ConcurrentImageProcessor {
    * max number of processing threads.
    * Note, this only changes the number of filter and writer threads,
    * since reading is very fast (always only have 1 reader).
-   * May miss some images when prodconLimit > 1. Need to fix.
    */
-  private int prodconLimit = 1;
+  private final int prodconLimit;
+  
+  /**
+   * size of the prodcon buffers and semaphore resource counters
+   */
+  private final int prodconResources;
 
   private volatile double readTime = 0, processTime = 0, writeTime = 0, totalTime = 0;
 
@@ -48,28 +52,31 @@ public class ConcurrentImageProcessor {
   /**
    * global buffer to hold images to be processed
    */
-  private volatile FileNamePair[] imgsToFilter;
+  private volatile ArrayList<FileNamePair> imgsToFilter;
   private volatile int currentImgToFilter;
   /**
    * global buffer to hold images to be written
    */
-  private volatile FileNamePair[] imgsToWrite;
+  private volatile ArrayList<FileNamePair> imgsToWrite;
   private volatile int currentImgToWrite;
 
 
   public ConcurrentImageProcessor() {
-    freeFilters = new Semaphore(prodconLimit);
+	prodconLimit = 1;  
+	prodconResources = 8;
+	
+    freeFilters = new Semaphore(prodconResources);
     filledFilters = new Semaphore(0);
     readerFilterMutex = new ReentrantLock();
     // init filters' resource buffer
-    imgsToFilter = new FileNamePair[prodconLimit];
+    imgsToFilter = new ArrayList<>();
     currentImgToFilter = -1;
 
-    freeWriters = new Semaphore(prodconLimit);
+    freeWriters = new Semaphore(prodconResources);
     filledWriters = new Semaphore(0);
     filterWriterMutex = new ReentrantLock();
     // init writers' resource buffer
-    imgsToWrite = new FileNamePair[prodconLimit];
+    imgsToWrite = new ArrayList<>();
     currentImgToWrite = -1;
   }
 
@@ -107,10 +114,6 @@ public class ConcurrentImageProcessor {
 
     // get image files to be read
     ArrayList<File> files = getFiles(imagesPath);
-
-    // if more threads than files are spun, hey will stay asleep and wont
-    // be able to consume poison-pill signal produced by reader thread to end them
-    if (files.size() < prodconLimit) prodconLimit = files.size();
     
     // spin off reader, filterers, and writers
     // only 1 reader, since only allowing 8 to-be-processed imgs at a time
@@ -120,7 +123,7 @@ public class ConcurrentImageProcessor {
     for (int i=0; i < prodconLimit; i++) {
         filters[i] = new Filter_t(filterName);
         writers[i] = new Writer_t();
-      }
+    }
 
     reader.start();
     for (int i=0; i < prodconLimit; i++) filters[i].start();
@@ -194,7 +197,7 @@ public class ConcurrentImageProcessor {
 				readerFilterMutex.lock();
 				
 				// read in next image
-				File img = files.get(0);
+				File img = files.remove(0);  
 				timeDelta = System.currentTimeMillis();
 				BufferedImage buffOut = file2BufferedImage(img);
 				readTime += (System.currentTimeMillis() - readTime) / 1000;
@@ -202,10 +205,8 @@ public class ConcurrentImageProcessor {
 				// add read image and name to filter buffer
 				currentImgToFilter++;
 				FileNamePair toProcess = new FileNamePair(buffOut, removeFilenameExt(img.getName()));
-				imgsToFilter[currentImgToFilter] = toProcess;
-		    
-				// remove image from waiting queue
-				files.remove(0);
+				//imgsToFilter[currentImgToFilter] = toProcess;
+				imgsToFilter.add(toProcess);
 				
 				readerFilterMutex.unlock();
 				filledFilters.release();
@@ -219,7 +220,8 @@ public class ConcurrentImageProcessor {
 				// add all poison pill to filter buffer
 				currentImgToFilter++;
 				FileNamePair poison = new FileNamePair(null, null);
-				imgsToFilter[currentImgToFilter] = poison;
+				//imgsToFilter[currentImgToFilter] = poison;
+				imgsToFilter.add(poison);
 				
 				readerFilterMutex.unlock();
 				filledFilters.release();
@@ -283,13 +285,15 @@ public class ConcurrentImageProcessor {
     			readerFilterMutex.lock();
     			
 				// get next image from buffer for processing
-				BufferedImage input = imgsToFilter[currentImgToFilter].image;
-				String outputNameSuffix = imgsToFilter[currentImgToFilter].imageName;
+				BufferedImage input = imgsToFilter.get(0).image;
+				String outputNameSuffix = imgsToFilter.get(0).imageName;
+				imgsToFilter.remove(0);
 				currentImgToFilter--;
 				
 				readerFilterMutex.unlock();
     			freeFilters.release();
     			
+    			// check for poison pill
     			if (input==null && outputNameSuffix==null) {
     				break;
     			}
@@ -330,7 +334,7 @@ public class ConcurrentImageProcessor {
     			
     			currentImgToWrite++;
     			FileNamePair toWrite = new FileNamePair(output, outputName);
-    			imgsToWrite[currentImgToWrite] = toWrite;    			
+    			imgsToWrite.add(toWrite);    			
     			
     			filterWriterMutex.unlock();
     			filledWriters.release();
@@ -342,7 +346,7 @@ public class ConcurrentImageProcessor {
 			
 			currentImgToWrite++;
 			FileNamePair poison = new FileNamePair(null, null);
-			imgsToWrite[currentImgToWrite] = poison;    			
+			imgsToWrite.add(poison);    			
 			
 			filterWriterMutex.unlock();
 			filledWriters.release();
@@ -428,13 +432,15 @@ public class ConcurrentImageProcessor {
 				  filterWriterMutex.lock();
           
 				  // get next image from buffer to write
-				  BufferedImage img = imgsToWrite[currentImgToWrite].image;
-				  String name = imgsToWrite[currentImgToWrite].imageName;
+				  BufferedImage img = imgsToWrite.get(0).image;
+				  String name = imgsToWrite.get(0).imageName;
+				  imgsToWrite.remove(0);
 				  currentImgToWrite--;
           
 				  filterWriterMutex.unlock();
 				  freeWriters.release();
 				  
+				  // check for poison pill
 				  if (img==null && name==null) {
 					  break;
 				  }
