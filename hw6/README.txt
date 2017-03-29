@@ -29,16 +29,22 @@ Q2:
 Q3:
 Q4:
 	oil1:
-		Time spent reading: 8.685743245046739E10 sec.
-		Cumulative time spent processing: 837.5480000000005 sec.
-		Cumulative spent writing: 63.897 sec.
-		Overall execution time: 111.374 sec.
+		Time spent reading: 8.685807527929378E10 sec.
+		Cumulative time spent processing: 204.09699999999995 sec.
+		Cumulative spent writing: 8.094999999999999 sec.
+		Overall execution time: 204.931 sec.
 	oil3:
-		Time spent reading: 8.685743937997603E10 sec.
-		Cumulative time spent processing: 1095.83 sec.
-		Cumulative spent writing: 93.82100000000001 sec.
-		Overall execution time: 148.408 sec.
+		Time spent reading: 8.685808876184373E10 sec.
+		Cumulative time spent processing: 268.747 sec.
+		Cumulative spent writing: 7.9639999999999995 sec.
+		Overall execution time: 269.605 sec.
 	invert:
-		
+		Time spent reading: 8.685809841215955E10 sec.
+		Cumulative time spent processing: 8.685809852827374E10 sec.
+		Cumulative spent writing: 7.700000000000002 sec.
+		Overall execution time: 15.013 sec.
 	smear:
-
+		Time spent reading: 8.685809932607713E10 sec.
+		Cumulative time spent processing: 8.685809944683267E10 sec.
+		Cumulative spent writing: 7.72 sec.
+		Overall execution time: 15.594 sec.
