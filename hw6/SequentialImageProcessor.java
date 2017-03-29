@@ -62,7 +62,8 @@ public class SequentialImageProcessor {
 
         BufferedImage output = null;
         int range = Character.getNumericValue(filterName.charAt(3));
-        String outputNameSuffix = img.getName();
+        String outputNameSuffix = removeFilenameExt(img.getName());
+        
 
         // filter and record time
         timeDelta = System.currentTimeMillis();
@@ -82,7 +83,7 @@ public class SequentialImageProcessor {
         readTime += (System.currentTimeMillis() - readTime) / 1000;
 
         BufferedImage output = null;
-        String outputNameSuffix = img.getName();
+        String outputNameSuffix = removeFilenameExt(img.getName());
 
         // filter and record time
         timeDelta = System.currentTimeMillis();
@@ -102,7 +103,7 @@ public class SequentialImageProcessor {
         readTime += (System.currentTimeMillis() - readTime) / 1000;
 
         BufferedImage output = null;
-        String outputNameSuffix = img.getName();
+        String outputNameSuffix = removeFilenameExt(img.getName());
 
         // filter and record time
         timeDelta = System.currentTimeMillis();
@@ -141,6 +142,18 @@ public class SequentialImageProcessor {
     }
 
     return files;
+  }
+  
+  /**
+   * 
+   * @param filename
+   * @return filename truncated at before '.' character
+   */
+  private String removeFilenameExt(String filename) {
+	  if (filename.indexOf(".") > 0) {
+          filename = filename.substring(0, filename.lastIndexOf("."));
+      }
+	  return filename;
   }
 
   private BufferedImage file2BufferedImage(File file) {

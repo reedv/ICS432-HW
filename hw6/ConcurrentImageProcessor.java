@@ -26,7 +26,7 @@ public class ConcurrentImageProcessor {
   /**
    * max number of processing threads
    */
-  private final int prodconLimit = 8;
+  private int prodconLimit = 8;
 
   private volatile double readTime = 0, processTime = 0, writeTime = 0, totalTime = 0;
 
@@ -54,7 +54,7 @@ public class ConcurrentImageProcessor {
   private volatile int currentImgToWrite;
   
   /**
-   * poison pill set by reader worker to signal all threads finish up
+   * poison pill set by reader worker to signal that all files have been read and written to buffer
    */
   private boolean allFilesRead;
 
@@ -90,7 +90,7 @@ public class ConcurrentImageProcessor {
     // init. input args
     try
     {
-      filterName = args[0];
+      filterName = args[0].toLowerCase();
       imagesPath = args[1];
     }
     catch (ArrayIndexOutOfBoundsException e)
@@ -112,6 +112,10 @@ public class ConcurrentImageProcessor {
     // get image files to be read
     ArrayList<File> files = getFiles(imagesPath);
 
+    // if more threads than files are spun, hey will stay asleep and wont
+    // be able to consume poison-pill signal produced by reader thread to end them
+    if (files.size() < prodconLimit) prodconLimit = files.size();
+    
     // spin off reader, filterers, and writers
     // only 1 reader, since only allowing 8 to-be-processed imgs at a time
     Reader_t reader = new Reader_t(files);
@@ -140,8 +144,8 @@ public class ConcurrentImageProcessor {
     // log finishing times
     totalTime = (System.currentTimeMillis() - totalTime) / 1000;
     System.out.println("\nTime spent reading: "+ readTime +" sec.");
-    System.out.println("Time spent processing: "+ processTime +" sec.");
-    System.out.println("Time spent writing: "+ writeTime +" sec.");
+    System.out.println("Cumulative time spent processing: "+ processTime +" sec.");
+    System.out.println("Cumulative spent writing: "+ writeTime +" sec.");
     System.out.println("Overall execution time: "+ totalTime +" sec.");
 
   }
@@ -167,6 +171,7 @@ public class ConcurrentImageProcessor {
   }
 
 
+  
   /*******************************
    * ProdCon Threads
    *******************************/
@@ -200,7 +205,7 @@ public class ConcurrentImageProcessor {
 				
 				// add read image and name to filter buffer
 				currentImgToFilter++;
-				FileNamePair toProcess = new FileNamePair(buffOut, img.getName());
+				FileNamePair toProcess = new FileNamePair(buffOut, removeFilenameExt(img.getName()));
 				imgsToFilter[currentImgToFilter] = toProcess;
 		    
 				// remove image from waiting queue
@@ -210,13 +215,13 @@ public class ConcurrentImageProcessor {
 				filledFilters.release();
 		    }
 			
-			// set poison pill when all files read
-			allFilesRead = true;
+			// set poison pill when all files read and in buffer queue
+			allFilesRead = true;			
 	    } catch (InterruptedException e) {
 
 	    }
 		
-		System.out.println("Reader thread exiting: " + Thread.currentThread().getId());
+		//System.out.println("Reader thread exiting: " + Thread.currentThread().getId());
     }	
 
     private BufferedImage file2BufferedImage(File file) {
@@ -232,6 +237,18 @@ public class ConcurrentImageProcessor {
     	}
 	
     	return buffOut;
+    }
+    
+    /**
+     * Simple filename extension remover
+     * @param filename
+     * @return filename truncated before first '.' character
+     */
+    private String removeFilenameExt(String filename) {
+  	  if (filename.indexOf(".") > 0) {
+            filename = filename.substring(0, filename.lastIndexOf("."));
+        }
+  	  return filename;
     }
   }
 
@@ -309,7 +326,7 @@ public class ConcurrentImageProcessor {
     		}
     	}
     	
-    	System.out.println("Filter thread exiting: " + Thread.currentThread().getId());
+    	//System.out.println("Filter thread exiting: " + Thread.currentThread().getId());
 	}
     
     private BufferedImage oilFilter(BufferedImageOp filter,
@@ -396,12 +413,19 @@ public class ConcurrentImageProcessor {
 			  }
 		  }
 		  
-		  System.out.println("Writer thread exiting: " + Thread.currentThread().getId());
+		  //System.out.println("Writer thread exiting: " + Thread.currentThread().getId());
 	  }
     
+	/**
+	 * Writes image to disk in current directory. Image name is the filename
+	 * with the extension given by formatName, which will also be the format type of the file.
+	 * @param image
+	 * @param filename
+	 * @param formatName
+	 */
     private void saveImage(BufferedImage image, String filename, String formatName) {
         try {
-          ImageIO.write(image, formatName, new File(filename));
+          ImageIO.write(image, formatName, new File(filename + "." + formatName));
 
           // print to indicate that file has been written
           System.out.print("w");
@@ -415,8 +439,9 @@ public class ConcurrentImageProcessor {
 
 }
 
+
 /**
- * Helper class pair type for holding images and thier names to be written
+ * Helper class pair type for holding images and their names to be written
  */
 class FileNamePair {
   public BufferedImage image;
