@@ -29,12 +29,17 @@ Q2:
 Q3:
 Q4:
 	oil1:
-		
+		Time spent reading: 8.685743245046739E10 sec.
+		Cumulative time spent processing: 837.5480000000005 sec.
+		Cumulative spent writing: 63.897 sec.
+		Overall execution time: 111.374 sec.
 	oil3:
-		Time spent reading: 8.685207715865367E10 sec.
-		Cumulative time spent processing: 1209.8880000000006 sec.
-		Cumulative time spent writing: 104.44999999999997 sec.
-		Overall execution time: 163.792 sec.
+		Time spent reading: 8.685743937997603E10 sec.
+		Cumulative time spent processing: 1095.83 sec.
+		Cumulative spent writing: 93.82100000000001 sec.
+		Overall execution time: 148.408 sec.
 	invert:
 		
 	smear:
+
+BUG: When processing threads try to acquire from filledFilters sem. and end up going to sleep, if reader has already finished and other filters have taken the items to be processed, then this sleeping thread stays alseep and never wakes back up.

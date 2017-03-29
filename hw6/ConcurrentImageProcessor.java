@@ -54,14 +54,16 @@ public class ConcurrentImageProcessor {
   private volatile int currentImgToWrite;
   
   /**
-   * poison pill set by reader worker to signal that all files have been read and written to buffer
+   * poison pill set by reader worker to signal that all files have been read and written to processing buffer
    */
-  private boolean allFilesRead;
+  private volatile boolean allFilesRead = false;
+  /**
+   * poison pill set by filter worker to signal that all files have been processed and written to writing buffer
+   */
+  private volatile boolean allFilesProcessed = false;
 
 
   public ConcurrentImageProcessor() {
-	allFilesRead = false;  
-	  
     freeFilters = new Semaphore(prodconLimit);
     filledFilters = new Semaphore(0);
     readerFilterMutex = new ReentrantLock();
@@ -151,7 +153,7 @@ public class ConcurrentImageProcessor {
   }
 
   /**
-  * Returns full list of Files from a given dir. path
+  * Returns full list of image_*.jpg Files from a given dir. path
   * */
   private ArrayList<File> getFiles(String directoryPath) {
     ArrayList<File> files = new ArrayList<>();
@@ -221,7 +223,7 @@ public class ConcurrentImageProcessor {
 
 	    }
 		
-		//System.out.println("Reader thread exiting: " + Thread.currentThread().getId());
+		System.out.println("Reader thread exiting: " + Thread.currentThread().getId());
     }	
 
     private BufferedImage file2BufferedImage(File file) {
@@ -271,6 +273,7 @@ public class ConcurrentImageProcessor {
     public void run() {
     	while (!allFilesRead || currentImgToFilter > -1) {
     		try {
+    			System.out.println("Filter thread try acquire filter-sem. :" + Thread.currentThread().getId());
     			filledFilters.acquire();
     			readerFilterMutex.lock();
     			
@@ -312,12 +315,18 @@ public class ConcurrentImageProcessor {
 			    }
 
     			// pass image onto writers
+    			System.out.println("Filter thread try acquire writer-sem. :" + Thread.currentThread().getId());
     			freeWriters.acquire();
     			filterWriterMutex.lock();
     			
     			currentImgToWrite++;
     			FileNamePair toWrite = new FileNamePair(output, outputName);
     			imgsToWrite[currentImgToWrite] = toWrite;
+    			
+    			// send poison pill signal to writers
+    			if (allFilesRead && currentImgToFilter <= -1) {
+					allFilesProcessed = true;
+				}
     			
     			filterWriterMutex.unlock();
     			filledWriters.release();
@@ -326,7 +335,7 @@ public class ConcurrentImageProcessor {
     		}
     	}
     	
-    	//System.out.println("Filter thread exiting: " + Thread.currentThread().getId());
+    	System.out.println("Filter thread exiting: " + Thread.currentThread().getId());
 	}
     
     private BufferedImage oilFilter(BufferedImageOp filter,
@@ -391,7 +400,7 @@ public class ConcurrentImageProcessor {
 	  }
 
 	  public void run() {
-		  while (!allFilesRead || currentImgToWrite > -1) {
+		  while (!allFilesProcessed || currentImgToWrite > -1) {
 			  try {
 				  filledWriters.acquire();
 				  filterWriterMutex.lock();
@@ -413,7 +422,7 @@ public class ConcurrentImageProcessor {
 			  }
 		  }
 		  
-		  //System.out.println("Writer thread exiting: " + Thread.currentThread().getId());
+		  System.out.println("Writer thread exiting: " + Thread.currentThread().getId());
 	  }
     
 	/**
