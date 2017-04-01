@@ -22,8 +22,8 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
 import java.lang.Thread;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantLock;
+//import java.util.concurrent.Semaphore;
+//import java.util.concurrent.locks.ReentrantLock;
 
 public class ConcurrentImageProcessor {
 
@@ -44,14 +44,14 @@ public class ConcurrentImageProcessor {
   /**
    * resource counters to implement ProdCon design from reader to filterers
    */
-  private Semaphore freeFilters, filledFilters;
+  private Sem freeFilters, filledFilters;
   /**
    * resource counters to implement ProdCon design from filterers to writers
    */
-  private Semaphore freeWriters, filledWriters;
+  private Sem freeWriters, filledWriters;
   
-  private ReentrantLock readerFilterMutex;
-  private ReentrantLock filterWriterMutex;
+  private Lock readerFilterMutex;
+  private Lock filterWriterMutex;
     
   /**
    * global buffer to hold images to be processed
@@ -77,16 +77,16 @@ public class ConcurrentImageProcessor {
 	prodconLimit = 1;  
 	prodconResources = 8;
 	
-    freeFilters = new Semaphore(prodconResources);
-    filledFilters = new Semaphore(0);
-    readerFilterMutex = new ReentrantLock();
+    freeFilters = new Sem(prodconResources);
+    filledFilters = new Sem(0);
+    readerFilterMutex = new Lock();
     // init filters' resource buffer
     imgsToFilter = new ArrayList<>();
     currentImgToFilter = -1;
 
-    freeWriters = new Semaphore(prodconResources);
-    filledWriters = new Semaphore(0);
-    filterWriterMutex = new ReentrantLock();
+    freeWriters = new Sem(prodconResources);
+    filledWriters = new Sem(0);
+    filterWriterMutex = new Lock();
     // init writers' resource buffer
     imgsToWrite = new ArrayList<>();
     currentImgToWrite = -1;
@@ -510,6 +510,48 @@ public class ConcurrentImageProcessor {
 /*****************************************
  * Helper types
  * ***************************************/
+/**
+ * Lock implemented using java monitors
+ */
+class Lock {
+	private boolean locked = false;
+		
+	public synchronized void lock() throws InterruptedException {
+		while (locked) {
+			this.wait();
+		}
+		locked = true;
+	}
+	
+	public synchronized void unlock() {
+		locked = false;
+		this.notify();
+	}
+}
+
+/**
+ * Semaphore implemented using java monitors
+ */
+class Sem {
+	volatile int value;
+		
+	public Sem(int value) {
+		this.value = value;
+	}
+	
+	public synchronized void acquire() throws InterruptedException {
+		while (value == 0) {
+			this.wait();
+		}
+		value--;
+	}
+	
+	public synchronized void release() {
+		value++;
+		this.notify();
+	}
+}
+
 
 /**
  * Helper class pair type for holding images and their names to be written
