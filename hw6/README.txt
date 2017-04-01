@@ -2,7 +2,10 @@ Reed Villanueva
 ICS432
 HW6
 
-Q1:
+Q1: see SequentialImageProcessor.java
+	How to run:
+	javac -cp .:Filters.jar SequentialImageProcessor.java
+	java -cp .:Filters.jar SequentialImageProcessor <filter> <relative dir path>
 
 Q2:
 	Ranked by IO intensiveness :
@@ -32,7 +35,11 @@ Q2:
 		IO intensivness: 0.036701322150387315
 
 
-Q3:
+Q3: see ConcurrentImageProcessor.java
+	How to run:
+	javac -cp .:Filters.jar ConcurrentImageProcessor.java
+	java -cp .:Filters.jar ConcurrentImageProcessor <filter> <relative dir path>
+
 Q4:
 	Ranked by IO intensiveness:
 	invert:
@@ -58,5 +65,7 @@ Q4:
 		Cumulative time spent processing: 276.99499999999995 sec.
 		Cumulative spent writing: 13.345999999999997 sec.
 		Overall execution time: 277.81 sec.
-		IO intensivness: 0.06582068268380295	
+		IO intensivness: 0.06582068268380295
+
+	We see that as the computational performance of the threaded vs unthreaded programs increases, there is an increase in the IO intensity of the programs. 	
 

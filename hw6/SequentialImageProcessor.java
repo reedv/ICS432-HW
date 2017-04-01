@@ -75,7 +75,7 @@ public class SequentialImageProcessor {
 
         // write file and record time
         timeDelta = System.currentTimeMillis();
-        saveImage(output, "./oil" + range + "_" + outputNameSuffix + ".jpg");
+        saveImage(output, "./" + imagePath + "/oil" + range + "_" + outputNameSuffix + ".jpg");
         writeTime += (System.currentTimeMillis() - timeDelta) / 1000;
       }
     } else if (filterName.equals("invert")) {
@@ -95,7 +95,7 @@ public class SequentialImageProcessor {
 
         // write file and record time
         timeDelta = System.currentTimeMillis();
-        saveImage(output, "./invert_" + outputNameSuffix + ".jpg");
+        saveImage(output, "./" + imagePath + "/invert_" + outputNameSuffix + ".jpg");
         writeTime += (System.currentTimeMillis() - timeDelta) / 1000;
       }
     } else if (filterName.equals("smear")) {
@@ -115,7 +115,7 @@ public class SequentialImageProcessor {
 
         // write file and record time
         timeDelta = System.currentTimeMillis();
-        saveImage(output, "./smear_" + outputNameSuffix + ".jpg");
+        saveImage(output, "./" + imagePath + "/smear_" + outputNameSuffix + ".jpg");
         writeTime += (System.currentTimeMillis() - timeDelta) / 1000;
       }
     }

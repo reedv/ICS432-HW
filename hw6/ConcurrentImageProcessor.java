@@ -16,6 +16,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 
 import java.lang.Thread;
 import java.util.concurrent.Semaphore;
@@ -59,7 +63,15 @@ public class ConcurrentImageProcessor {
    */
   private volatile ArrayList<FileNamePair> imgsToWrite;
   private volatile int currentImgToWrite;
-
+  
+  /**
+   * progress bar for representing files written to disk
+   */
+  volatile ProdconProgressBar pbar;
+  /**
+   * tracks the number of files written to disk so far
+   */
+  volatile int filesWritten = 0;
 
   public ConcurrentImageProcessor() {
 	prodconLimit = 1;  
@@ -114,6 +126,10 @@ public class ConcurrentImageProcessor {
 
     // get image files to be read
     ArrayList<File> files = getFiles(imagesPath);
+    // start progress bar
+    final int epsilon = 2;
+    pbar = new ProdconProgressBar(files.size(), epsilon);
+    pbar.init(filterName + " filter");
     
     // spin off reader, filterers, and writers
     // only 1 reader, since only allowing 8 to-be-processed imgs at a time
@@ -122,7 +138,7 @@ public class ConcurrentImageProcessor {
     Writer_t[] writers = new Writer_t[prodconLimit];
     for (int i=0; i < prodconLimit; i++) {
         filters[i] = new Filter_t(filterName);
-        writers[i] = new Writer_t();
+        writers[i] = new Writer_t(imagesPath);
     }
 
     reader.start();
@@ -172,9 +188,9 @@ public class ConcurrentImageProcessor {
 
 
   
-  /*******************************
+  /*****************************************
    * ProdCon Threads
-   *******************************/
+   *****************************************/
 
   /*********************
    * reader worker
@@ -415,6 +431,11 @@ public class ConcurrentImageProcessor {
    * writer worker
    ********************/
   class Writer_t extends Thread {
+	  /**
+	   * relative path to write images to
+	   */
+	  private final String relativePath;
+	  
 	  private double timeDelta = 0;
 	  
 	  /**
@@ -422,8 +443,8 @@ public class ConcurrentImageProcessor {
 	   */
 	  private boolean killSelf = false;
 	  
-	  public Writer_t() {
-
+	  public Writer_t(String relativePath) {
+		  this.relativePath = relativePath;
 	  }
 
 	  public void run() {
@@ -450,6 +471,10 @@ public class ConcurrentImageProcessor {
 				  timeDelta = System.currentTimeMillis();
 				  saveImage(img, name, "jpg");
 				  writeTime += (System.currentTimeMillis() - timeDelta) / 1000;
+				  
+				  // update progress bar
+				  pbar.updateBarThread(++filesWritten);
+				 
 			  } catch (InterruptedException e) {
 				  break;
 			  }
@@ -467,7 +492,7 @@ public class ConcurrentImageProcessor {
 	 */
     private void saveImage(BufferedImage image, String filename, String formatName) {
         try {
-          ImageIO.write(image, formatName, new File(filename + "." + formatName));
+          ImageIO.write(image, formatName, new File("./" + relativePath + "/" + filename + "." + formatName));
 
           // print to indicate that file has been written
           System.out.print("w");
@@ -482,6 +507,10 @@ public class ConcurrentImageProcessor {
 }
 
 
+/*****************************************
+ * Helper types
+ * ***************************************/
+
 /**
  * Helper class pair type for holding images and their names to be written
  */
@@ -494,3 +523,71 @@ class FileNamePair {
     this.imageName = imgname;
   }
 }
+
+/**
+ * Creates progress bar and provides method for updating progress bar value
+ * @author reedvilanueva
+ *
+ */
+@SuppressWarnings("serial")
+class ProdconProgressBar extends JPanel {
+	JFrame frame;
+	JProgressBar pbar;
+
+	final int MINIMUM = 0;
+	final int MAXIMUM;
+	
+	/**
+	 * used in case volatile updates miss progress update values
+	 * in this.updateBarThread
+	 */
+	final int EPSILON;
+
+	public ProdconProgressBar(int maximum, int eps) {
+		// initialize Progress Bar
+		pbar = new JProgressBar();
+		this.EPSILON = eps;
+		this.MAXIMUM = maximum;
+		pbar.setMinimum(MINIMUM);
+		pbar.setMaximum(MAXIMUM);
+		// add to JPanel
+		add(pbar);
+	}
+	
+	/**
+	 * initializes window to display progress bar
+	 * @param barWindowName
+	 */
+	public void init(String barWindowName) {
+	    frame = new JFrame(barWindowName);
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setContentPane(pbar);
+	    frame.pack();
+	    frame.setBounds(150, 150, 
+	    				300, 100);
+	    frame.setVisible(true);
+	}
+	
+	/**
+	 * Runs a thread to update progress bar with new value percent
+	 * @param percent
+	 */
+	public void updateBarThread(final int percent) {
+		try {
+	        SwingUtilities.invokeLater(new Runnable() {
+	        	
+	          public void run() {
+	            pbar.setValue(percent);
+	            if(percent+EPSILON >= MAXIMUM) frame.dispose();
+	          }
+	          
+	        });
+	        java.lang.Thread.sleep(100);
+	      } catch (InterruptedException e) {
+	        ;
+	      }
+	}
+}
+
+
+
