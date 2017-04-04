@@ -24,6 +24,7 @@ public class WeirdFilterExample {
 			String filename = args[0];
 			input = ImageIO.read(new File("./" + filename));
 		} catch (IOException e) {
+			System.out.println("Usage: java WeirdFilterExample <image path>");
 			System.out.println("Cannot read file");
 			System.exit(1);
 		}
@@ -33,7 +34,7 @@ public class WeirdFilterExample {
 		// Apply Weird filter
 		filter = new WeirdFilter();
 		filter.filter(input,output);
-		saveImage(output, "./weird_image.jpg");
+		saveImage(output, "./weird_test_image.jpg");
 
 	}
 }

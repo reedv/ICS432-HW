@@ -25,7 +25,12 @@ import java.lang.Thread;
 //import java.util.concurrent.Semaphore;
 //import java.util.concurrent.locks.ReentrantLock;
 
-public class ConcurrentImageProcessor {
+/**
+ * Similar to ConcurrentImageProcessor but uses 1 reader, multiple filterers, 1 writer thread
+ * @author reedvilanueva
+ *
+ */
+public class ConcurrentImageProcessorTaskParallel {
 
   /**
    * max number of processing threads.
@@ -35,6 +40,15 @@ public class ConcurrentImageProcessor {
   private final int prodconLimit;
   
   /**
+   * For this assignment, needed to have 1 reader, multiple filterers, and 1 writer.
+   * So had to break the 1-to-1 filterers-writers ratio of ConcurrentImageProcessor
+   * based on the prodconLimit. Does not affect the multiple poison pill scheme of the reader
+   * so long as number of filterers > number of writers.
+   * I know its ugly, but thats what we're supposed to do.
+   */
+  private final int numFilterers;
+  
+  /**
    * size of the prodcon buffers and semaphore resource counters
    */
   private final int prodconResources;
@@ -42,11 +56,11 @@ public class ConcurrentImageProcessor {
   private volatile double readTime = 0, processTime = 0, writeTime = 0, totalTime = 0;
 
   /**
-   * resource counters to implement ProdCon design from reader to filterers
+   * buffer resource counters to implement ProdCon design from reader to filterers
    */
   private Sem freeFilters, filledFilters;
   /**
-   * resource counters to implement ProdCon design from filterers to writers
+   * buffer resource counters to implement ProdCon design from filterers to writers
    */
   private Sem freeWriters, filledWriters;
   
@@ -73,9 +87,10 @@ public class ConcurrentImageProcessor {
    */
   volatile int filesWritten = 0;
 
-  public ConcurrentImageProcessor() {
-	prodconLimit = 1;  
-	prodconResources = 8;
+  public ConcurrentImageProcessorTaskParallel(int resources, int numFilterers) {
+	prodconLimit = 1;
+	this.numFilterers = numFilterers;
+	prodconResources = resources;
 	
     freeFilters = new Sem(prodconResources);
     filledFilters = new Sem(0);
@@ -93,11 +108,13 @@ public class ConcurrentImageProcessor {
   }
 
   public static void main(String args[]) {
-    ConcurrentImageProcessor cip = new ConcurrentImageProcessor();
-    cip.concurrentImageProcessor(args);
+	  final int numThreads = Integer.parseInt(args[0]);
+	  ConcurrentImageProcessorTaskParallel cip_tp = 
+			  new ConcurrentImageProcessorTaskParallel(8, numThreads);
+	  cip_tp.concurrentImageProcessorTaskParallel(args);
   }
 
-  private void concurrentImageProcessor(String args[]) {
+  private void concurrentImageProcessorTaskParallel(String args[]) {
     totalTime = System.currentTimeMillis();
 
     String filterName = "", imagesPath = "";
@@ -105,22 +122,27 @@ public class ConcurrentImageProcessor {
     // init. input args
     try
     {
-      filterName = args[0].toLowerCase();
-      imagesPath = args[1];
+	  filterName = args[1].toLowerCase();
+	  imagesPath = args[2];
     }
     catch (ArrayIndexOutOfBoundsException e)
     {
-      System.out.println("Usage: java -cp  .:Filters.jar ConcurrentImageProcessor <filter name> <directory path>");
+      System.out.println("Usage: java -cp .:Filters.jar ConcurrentImageProcessor "
+      		+ "<number filter threads> <filter name> <directory path>");
       System.exit(0);
     }
 
     // check for valid filter option
     if (!filterName.equals("oil1") && !filterName.equals("oil3") &&
         !filterName.equals("invert") &&
-        !filterName.equals("smear")) {
+        !filterName.equals("smear") &&
+        !filterName.equals("weird")) {
       System.out.println(filterName + " is not a valid filter name.\n" +
           "Valid filter names:\n" +
-          "oil1, oil3, invert, smear\n");
+          "oil1, oil3, invert, smear, weird\n");
+      System.out.println("args: <threads>="+numFilterers+
+    		             "<filter name>="+filterName+
+    		             " <dir path>="+imagesPath);
       System.exit(0);
     }
 
@@ -134,21 +156,19 @@ public class ConcurrentImageProcessor {
     // spin off reader, filterers, and writers
     // only 1 reader, since only allowing 8 to-be-processed imgs at a time
     Reader_t reader = new Reader_t(files);
-    Filter_t[] filters = new Filter_t[prodconLimit];
+    Filter_t[] filters = new Filter_t[numFilterers];
     Writer_t[] writers = new Writer_t[prodconLimit];
-    for (int i=0; i < prodconLimit; i++) {
-        filters[i] = new Filter_t(filterName);
-        writers[i] = new Writer_t(imagesPath);
-    }
+    for (int i=0; i < numFilterers; i++) filters[i] = new Filter_t(filterName);
+    for (int i=0; i < prodconLimit; i++) writers[i] = new Writer_t(imagesPath);
 
     reader.start();
-    for (int i=0; i < prodconLimit; i++) filters[i].start();
+    for (int i=0; i < numFilterers; i++) filters[i].start();
     for (int i=0; i < prodconLimit; i++) writers[i].start();
 
     // collect all threads once all images processed and written
     try {
       reader.join();
-      for (int i = 0; i < prodconLimit; i++) filters[i].join();
+      for (int i = 0; i < numFilterers; i++) filters[i].join();
       for (int i = 0; i < prodconLimit; i++) writers[i].join();
     } catch (InterruptedException e) {
       System.err.println("Exception while trying to join threads");
@@ -231,8 +251,8 @@ public class ConcurrentImageProcessor {
 				filledFilters.release();
 		    }
 			
-			// insert poison pills to buffer for each filter worker when all files read
-			for (int i=0; i < prodconLimit; i++) {
+			// insert poison pills to back of buffer for each filter worker when all files read
+			for (int i=0; i < numFilterers; i++) {
 				freeFilters.acquire();
 				readerFilterMutex.lock();
 				
@@ -329,23 +349,31 @@ public class ConcurrentImageProcessor {
 			        output = oilFilter(filter, input, output, range);
 			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
-			        outputName = "./oil" + range + "_" + outputNameSuffix;
+			        //outputName = "./oil" + range + "_" + outputNameSuffix;
 			    } else if (filterName.equals("invert")) {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = invertFilter(filter, input, output);
 			        processTime += (System.currentTimeMillis() - timeDelta) /1000;
 
-			        outputName = "./invert_" + outputNameSuffix;
+			        //outputName = "./invert_" + outputNameSuffix;
 			    } else if (filterName.equals("smear")) {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = smearFilter(filter, input, output, 10);
 			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
-			        outputName = "./smear_" + outputNameSuffix;
-			    }
+			        //outputName = "./smear_" + outputNameSuffix;
+			    } else if (filterName.equals("weird")) {
+			    	// filter and record time
+			        timeDelta = System.currentTimeMillis();
+			        output = weirdFilter(filter, input, output);
+			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
+			        //outputName = "./weird_" + outputNameSuffix;
+			    }
+				outputName = "./"+filterName+"_"+outputNameSuffix;
+				
     			// pass image onto writers
 				//System.out.println("Filter thread try acquire writer-sem.: currentImgToFilter=" + currentImgToFilter + ": " + Thread.currentThread().getId());
     			freeWriters.acquire();
@@ -426,6 +454,20 @@ public class ConcurrentImageProcessor {
 		return output;
 	}
 	
+	private BufferedImage weirdFilter(BufferedImageOp filter,
+							BufferedImage input, BufferedImage output) {
+		// init. output image
+		output = new BufferedImage(input.getWidth(), input.getHeight(), input.getType());
+		
+		// Apply the Invert filter
+		filter = new WeirdFilter();
+		filter.filter(input, output);
+		
+		// indicate that file has been processed
+		System.out.print("p");
+		
+		return output;
+	}
   }
 
   
@@ -582,8 +624,9 @@ class ProdconProgressBar extends JPanel {
 	final int MAXIMUM;
 	
 	/**
-	 * used in case volatile updates miss progress update values
-	 * in this.updateBarThread
+	 * Used in case volatile updates miss progress update values
+	 * in this.updateBarThread. Lets progrss bar close even when miss
+	 * some updates values to stop from freezing.
 	 */
 	final int EPSILON;
 
