@@ -7,7 +7,7 @@ Q1: see SequentialImageProcessor.java
 	javac -cp .:Filters.jar SequentialImageProcessor.java
 	java -cp .:Filters.jar SequentialImageProcessor <filter> <relative dir path>
 
-Q2:
+Q3:
 	Ranked by IO intensiveness :
 	invert:
 		Time spent reading: 3.546999999999999 sec.
