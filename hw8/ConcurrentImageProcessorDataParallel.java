@@ -17,50 +17,29 @@ import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 
-import java.lang.Thread;
-//import java.util.concurrent.Semaphore;
-//import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Similar to ConcurrentImageProcessor but uses 1 reader, multiple filterers, prodconLimit=1 writer thread.
- * WARN: becuase of how the multiple producer multiple consumer scheme is done between filter and writer
- * threads, may end up with 1 more writer threads than expected if prodconLimit > 1 
- * (if filter threads dont evenly divide writer threads).
- * @author reedvilanueva
- *
- */
-public class ConcurrentImageProcessorTaskParallel {
+public class ConcurrentImageProcessorDataParallel {
 
   /**
    * max number of processing threads.
    * Note, this only changes the number of filter and writer threads,
    * since reading is very fast (always only have 1 reader).
    */
-  private int prodconLimit;
-  
-  /**
-   * For this assignment, needed to have 1 reader, multiple filterers, and 1 writer.
-   * So had to break the 1-to-1 filterers-writers ratio of ConcurrentImageProcessor
-   * based on the prodconLimit. Does not affect the multiple poison pill scheme of the reader
-   * so long as number of filterers > number of writers.
-   * I know its ugly, but thats what we're supposed to do.
-   */
-  private final int numFilterers;
+  private final int prodconLimit;
   
   /**
    * size of the prodcon buffers and semaphore resource counters
    */
   private final int prodconResources;
 
-  // note: no longer track cumulative processTime, insead each thread tracks its own
-  private volatile double readTime = 0, /*processTime = 0,*/ writeTime = 0, totalTime = 0;
+  private volatile double readTime = 0, processTime = 0, writeTime = 0, totalTime = 0;
 
   /**
-   * buffer resource counters to implement ProdCon design from reader to filterers
+   * resource counters to implement ProdCon design from reader to filterers
    */
   private Sem freeFilters, filledFilters;
   /**
-   * buffer resource counters to implement ProdCon design from filterers to writers
+   * resource counters to implement ProdCon design from filterers to writers
    */
   private Sem freeWriters, filledWriters;
   
@@ -87,10 +66,9 @@ public class ConcurrentImageProcessorTaskParallel {
    */
   volatile int filesWritten = 0;
 
-  public ConcurrentImageProcessorTaskParallel(int resources, int numFilterers) {
-	prodconLimit = 1;
-	this.numFilterers = numFilterers;
-	prodconResources = resources;
+  public ConcurrentImageProcessorDataParallel() {
+	prodconLimit = 1;  
+	prodconResources = 8;
 	
     freeFilters = new Sem(prodconResources);
     filledFilters = new Sem(0);
@@ -108,13 +86,11 @@ public class ConcurrentImageProcessorTaskParallel {
   }
 
   public static void main(String args[]) {
-	  final int numThreads = Integer.parseInt(args[0]);
-	  ConcurrentImageProcessorTaskParallel cip_tp = 
-			  new ConcurrentImageProcessorTaskParallel(8, numThreads);
-	  cip_tp.concurrentImageProcessorTaskParallel(args);
+	  ConcurrentImageProcessorDataParallel cip_dp = new ConcurrentImageProcessorDataParallel();
+    cip_dp.concurrentImageProcessorDataParallel(args);
   }
 
-  private void concurrentImageProcessorTaskParallel(String args[]) {
+  private void concurrentImageProcessorDataParallel(String args[]) {
     totalTime = System.currentTimeMillis();
 
     String filterName = "", imagesPath = "";
@@ -122,27 +98,22 @@ public class ConcurrentImageProcessorTaskParallel {
     // init. input args
     try
     {
-	  filterName = args[1].toLowerCase();
-	  imagesPath = args[2];
+      filterName = args[0].toLowerCase();
+      imagesPath = args[1];
     }
     catch (ArrayIndexOutOfBoundsException e)
     {
-      System.out.println("Usage: java -cp .:Filters.jar ConcurrentImageProcessor "
-      		+ "<number filter threads> <filter name> <directory path>");
+      System.out.println("Usage: java -cp  .:Filters.jar ConcurrentImageProcessor <filter name> <directory path>");
       System.exit(0);
     }
 
     // check for valid filter option
     if (!filterName.equals("oil1") && !filterName.equals("oil3") &&
         !filterName.equals("invert") &&
-        !filterName.equals("smear") &&
-        !filterName.equals("weird")) {
+        !filterName.equals("smear")) {
       System.out.println(filterName + " is not a valid filter name.\n" +
           "Valid filter names:\n" +
-          "oil1, oil3, invert, smear, weird\n");
-      System.out.println("args: <threads>="+numFilterers+
-    		             "<filter name>="+filterName+
-    		             " <dir path>="+imagesPath);
+          "oil1, oil3, invert, smear\n");
       System.exit(0);
     }
 
@@ -153,28 +124,24 @@ public class ConcurrentImageProcessorTaskParallel {
     pbar = new ProdconProgressBar(files.size(), epsilon);
     pbar.init(filterName + " filter");
     
-    // if number of writer threads does not evenly divide filter threads
-    // not all writers can collect enough poison pills to know to terminate.
-    // May end up with unwritten filtered images left behind in filter-to-writer buffer.
-    final int pillsToCollect = (numFilterers%prodconLimit == 0)?
-    							numFilterers / prodconLimit:
-    							numFilterers / ++prodconLimit;
     // spin off reader, filterers, and writers
     // only 1 reader, since only allowing 8 to-be-processed imgs at a time
     Reader_t reader = new Reader_t(files);
-    Filter_t[] filters = new Filter_t[numFilterers];
+    Filter_t[] filters = new Filter_t[prodconLimit];
     Writer_t[] writers = new Writer_t[prodconLimit];
-    for (int i=0; i < numFilterers; i++) filters[i] = new Filter_t(filterName);
-    for (int i=0; i < prodconLimit; i++) writers[i] = new Writer_t(imagesPath, pillsToCollect);
+    for (int i=0; i < prodconLimit; i++) {
+        filters[i] = new Filter_t(filterName);
+        writers[i] = new Writer_t(imagesPath);
+    }
 
     reader.start();
-    for (int i=0; i < numFilterers; i++) filters[i].start();
+    for (int i=0; i < prodconLimit; i++) filters[i].start();
     for (int i=0; i < prodconLimit; i++) writers[i].start();
 
     // collect all threads once all images processed and written
     try {
       reader.join();
-      for (int i = 0; i < numFilterers; i++) filters[i].join();
+      for (int i = 0; i < prodconLimit; i++) filters[i].join();
       for (int i = 0; i < prodconLimit; i++) writers[i].join();
     } catch (InterruptedException e) {
       System.err.println("Exception while trying to join threads");
@@ -185,13 +152,11 @@ public class ConcurrentImageProcessorTaskParallel {
     // log finishing times
     totalTime = (System.currentTimeMillis() - totalTime) / 1000;
     System.out.println("\nTime spent reading: "+ readTime +" sec.");
-    /*System.out.println("Cumulative time spent processing: "+ processTime +" sec.");*/
+    System.out.println("Cumulative time spent processing: "+ processTime +" sec.");
     System.out.println("Cumulative spent writing: "+ writeTime +" sec.");
     System.out.println("Overall execution time: "+ totalTime +" sec.");
-    /*System.out.println("IO intensivness: " + (readTime + writeTime) / processTime);*/
+    System.out.println("IO intensivness: " + (readTime + writeTime) / processTime);
 
-    // close progress bar if not closed yet if some files stalling
-    //pbar.frame.dispose();
   }
 
   /**
@@ -259,8 +224,8 @@ public class ConcurrentImageProcessorTaskParallel {
 				filledFilters.release();
 		    }
 			
-			// insert poison pills to back of buffer for each filter worker when all files read
-			for (int i=0; i < numFilterers; i++) {
+			// insert poison pills to buffer for each filter worker when all files read
+			for (int i=0; i < prodconLimit; i++) {
 				freeFilters.acquire();
 				readerFilterMutex.lock();
 				
@@ -318,10 +283,6 @@ public class ConcurrentImageProcessorTaskParallel {
 	 */
     private final String filterName;
     
-    /**
-     * Track processsing time of each individual filterer thread.
-     */
-    private double processTime = 0;
     private double timeDelta = 0;
 
     public Filter_t(String filterName) {
@@ -360,24 +321,24 @@ public class ConcurrentImageProcessorTaskParallel {
 			        timeDelta = System.currentTimeMillis();
 			        output = oilFilter(filter, input, output, range);
 			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
+
+			        outputName = "./oil" + range + "_" + outputNameSuffix;
 			    } else if (filterName.equals("invert")) {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = invertFilter(filter, input, output);
 			        processTime += (System.currentTimeMillis() - timeDelta) /1000;
+
+			        outputName = "./invert_" + outputNameSuffix;
 			    } else if (filterName.equals("smear")) {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = smearFilter(filter, input, output, 10);
 			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
-			    } else if (filterName.equals("weird")) {
-			    	// filter and record time
-			        timeDelta = System.currentTimeMillis();
-			        output = weirdFilter(filter, input, output);
-			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
+
+			        outputName = "./smear_" + outputNameSuffix;
 			    }
-				outputName = "./"+filterName+"_"+outputNameSuffix;
-				
+
     			// pass image onto writers
 				//System.out.println("Filter thread try acquire writer-sem.: currentImgToFilter=" + currentImgToFilter + ": " + Thread.currentThread().getId());
     			freeWriters.acquire();
@@ -390,10 +351,8 @@ public class ConcurrentImageProcessorTaskParallel {
     			filterWriterMutex.unlock();
     			filledWriters.release();
     		 }
-    		 
-    		 System.out.println("Time spent processing: "+ processTime +" sec.");
     		
-    		// insert a single poison pill in the back of filterwriter buffer for a corresponding writer
+    		// insert a single poison pill in the filterwriter buffer for a corresponding writer
     		freeWriters.acquire();
 			filterWriterMutex.lock();
 			
@@ -460,20 +419,6 @@ public class ConcurrentImageProcessorTaskParallel {
 		return output;
 	}
 	
-	private BufferedImage weirdFilter(BufferedImageOp filter,
-							BufferedImage input, BufferedImage output) {
-		// init. output image
-		output = new BufferedImage(input.getWidth(), input.getHeight(), input.getType());
-		
-		// Apply the Invert filter
-		filter = new WeirdFilter();
-		filter.filter(input, output);
-		
-		// indicate that file has been processed
-		System.out.print("p");
-		
-		return output;
-	}
   }
 
   
@@ -488,12 +433,13 @@ public class ConcurrentImageProcessorTaskParallel {
 	  
 	  private double timeDelta = 0;
 	  
-	  private final int pillsToCollect;
-	  private int poisonPillCount = 0;
+	  /**
+	   * toggled when this worker receives a poison pill
+	   */
+	  private boolean killSelf = false;
 	  
-	  public Writer_t(String relativePath, int pillsToCollect) {
+	  public Writer_t(String relativePath) {
 		  this.relativePath = relativePath;
-		  this.pillsToCollect = pillsToCollect;
 	  }
 
 	  public void run() {
@@ -513,10 +459,7 @@ public class ConcurrentImageProcessorTaskParallel {
 				  
 				  // check for poison pill
 				  if (img==null && name==null) {
-					  poisonPillCount++;
-					  if (poisonPillCount == pillsToCollect) break;
-					  
-					  continue;
+					  break;
 				  }
 
 				  // write file to disk and record time
@@ -557,8 +500,6 @@ public class ConcurrentImageProcessorTaskParallel {
   }
 
 }
-
-
 
 
 
