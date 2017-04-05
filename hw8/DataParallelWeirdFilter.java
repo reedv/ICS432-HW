@@ -6,15 +6,28 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ColorModel;
+import java.io.File;
+import java.io.IOException;
 import static java.lang.Math.cos;
 import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.imageio.ImageIO;
+
 
 public  class DataParallelWeirdFilter implements BufferedImageOp {
     
 	private static final int invalidRGB = -10000000;
+	private int filterers;
+	
+	public DataParallelWeirdFilter(int numThreads) {
+		filterers = numThreads;
+	}
 	
 	/**
 	 * @param x
@@ -60,26 +73,26 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
         }
         
         // assign remaining neighbor pixels
-        if(n[0] !=  invalidRGB) n[0] = image.getRGB(west, north);
+        if(n[0] != invalidRGB) n[0] = image.getRGB(west, north);
         
-        if(n[1] !=  invalidRGB) n[1] = image.getRGB(x, north);     
+        if(n[1] != invalidRGB) n[1] = image.getRGB(x, north);     
         
-        if(n[2] !=  invalidRGB) n[2] = image.getRGB(east, north);  
+        if(n[2] != invalidRGB) n[2] = image.getRGB(east, north);  
         
-        if(n[3] !=  invalidRGB) n[3] = image.getRGB(west, y);  
+        if(n[3] != invalidRGB) n[3] = image.getRGB(west, y);  
         
-        if(n[4] !=  invalidRGB) n[4] = image.getRGB(east, y);  
+        if(n[4] != invalidRGB) n[4] = image.getRGB(east, y);  
         
-        if(n[5] !=  invalidRGB) n[5] = image.getRGB(west, south); 
+        if(n[5] != invalidRGB) n[5] = image.getRGB(west, south); 
         
-        if(n[6] !=  invalidRGB) n[6] = image.getRGB(x, south);  
+        if(n[6] != invalidRGB) n[6] = image.getRGB(x, south);  
         
-        if(n[7] !=  invalidRGB) n[7] = image.getRGB(east, south);  
+        if(n[7] != invalidRGB) n[7] = image.getRGB(east, south);  
         
         return n;
     }
     
-    public static int weirdFilter(int x, int y, BufferedImage image)
+    public synchronized static int weirdFilter(int x, int y, BufferedImage image)
     { 
         //get neighbor pixels
         int[] neighbors = getNeighbors(x, y, image);
@@ -111,9 +124,9 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
         }
         
         int numberOfNeighbors = neighbors.length - notExistingPixels;
-        newpixel_bytes[0]   /= numberOfNeighbors;
-        newpixel_bytes[1]   /= numberOfNeighbors;
-        newpixel_bytes[2]   /= numberOfNeighbors;
+        newpixel_bytes[0] /= numberOfNeighbors;
+        newpixel_bytes[1] /= numberOfNeighbors;
+        newpixel_bytes[2] /= numberOfNeighbors;
         
         return RGB.bytesToInt(newpixel_bytes);
     }
@@ -124,12 +137,14 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
      */
     @Override
     public BufferedImage filter(BufferedImage inputImage, BufferedImage outputImage) {
+    	ExecutorService pool = Executors.newFixedThreadPool(filterers); 
+    	
     	// apply weird filter to all pixels from top-left to bottom-right
-		for (int i = 0; i < inputImage.getWidth(); i++) {
-			for (int j = 0; j < inputImage.getHeight(); j++) {
-				outputImage.setRGB(i, j, weirdFilter(i, j,inputImage));
-			}
+		for (int i = 0; i < inputImage.getWidth(); i++) {				
+			pool.execute(new Filter_t(i, inputImage, outputImage));
 		}
+		pool.shutdown();
+		
         return outputImage;
 	}
 
@@ -151,6 +166,37 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
     @Override
     public RenderingHints getRenderingHints() {
         throw new UnsupportedOperationException("Not supported");
+    }
+    
+    
+    /*********************
+     * filter worker
+     ********************/
+    class Filter_t extends Thread {
+    	private final int x; 
+    	private final BufferedImage inImage;
+    	private BufferedImage outImage;
+    	
+    	public Filter_t(int x, BufferedImage inImage, BufferedImage outImage) {
+    		this.x = x;
+    		this.inImage = inImage;
+    		this.outImage = outImage;
+    	}
+	
+    	public void run() {
+			try {
+				// note: _method_ manipulation will alter the objects, 
+				// since the references point to the original objects. 
+				// But since the references are copies, swaps will fail
+				 for (int y = 0; y < inImage.getHeight(); y++) {
+					outImage.setRGB(x, y, DataParallelWeirdFilter.weirdFilter(x, y, inImage));
+				 }
+				 System.out.print("*");
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+    	}
+     
     }
     
 }

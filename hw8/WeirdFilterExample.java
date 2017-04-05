@@ -33,6 +33,7 @@ public class WeirdFilterExample {
 
 		// Apply Weird filter
 		filter = new WeirdFilter();
+		//filter = new DataParallelWeirdFilter(4);
 		filter.filter(input,output);
 		saveImage(output, "./weird_test_image.jpg");
 
