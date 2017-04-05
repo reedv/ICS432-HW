@@ -12,10 +12,10 @@ import static java.lang.Math.cos;
 import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
@@ -92,7 +92,7 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
         return n;
     }
     
-    public synchronized static int weirdFilter(int x, int y, BufferedImage image)
+    public static int weirdFilter(int x, int y, BufferedImage image)
     { 
         //get neighbor pixels
         int[] neighbors = getNeighbors(x, y, image);
@@ -143,7 +143,14 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
 		for (int i = 0; i < inputImage.getWidth(); i++) {				
 			pool.execute(new Filter_t(i, inputImage, outputImage));
 		}
+		
 		pool.shutdown();
+		try {
+			// wait for all tasks in threadpool queue to finish
+			pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
         return outputImage;
 	}
@@ -194,6 +201,7 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
 				 System.out.print("*");
 			} catch (Exception e) {
 				System.err.println(e);
+				e.printStackTrace();
 			}
     	}
      
