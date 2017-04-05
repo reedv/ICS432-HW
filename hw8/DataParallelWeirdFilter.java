@@ -198,7 +198,7 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
 				 for (int y = 0; y < inImage.getHeight(); y++) {
 					outImage.setRGB(x, y, DataParallelWeirdFilter.weirdFilter(x, y, inImage));
 				 }
-				 System.out.print("*");
+				 //System.out.print("*");
 			} catch (Exception e) {
 				System.err.println(e);
 				e.printStackTrace();

@@ -18,6 +18,12 @@ import java.nio.file.Paths;
 import javax.imageio.ImageIO;
 
 
+/**
+ * Uses 1 of each kind of thread, but uses the data parallel version
+ * of the weird filter.
+ * @author reedvilanueva
+ *
+ */
 public class ConcurrentImageProcessorDataParallel {
 
   /**
@@ -93,27 +99,31 @@ public class ConcurrentImageProcessorDataParallel {
   private void concurrentImageProcessorDataParallel(String args[]) {
     totalTime = System.currentTimeMillis();
 
+    int weirdFilterThreads = 1;
     String filterName = "", imagesPath = "";
 
     // init. input args
     try
     {
-      filterName = args[0].toLowerCase();
-      imagesPath = args[1];
+    	weirdFilterThreads = Integer.parseInt(args[0]);
+    	filterName = args[1].toLowerCase();
+    	imagesPath = args[2];
     }
     catch (ArrayIndexOutOfBoundsException e)
     {
-      System.out.println("Usage: java -cp  .:Filters.jar ConcurrentImageProcessor <filter name> <directory path>");
+      System.out.println("Usage: java -cp  .:Filters.jar ConcurrentImageProcessor "
+      		+ "<weird filter threads> <filter name> <directory path>");
       System.exit(0);
     }
 
     // check for valid filter option
     if (!filterName.equals("oil1") && !filterName.equals("oil3") &&
         !filterName.equals("invert") &&
-        !filterName.equals("smear")) {
+        !filterName.equals("smear") &&
+        !filterName.equals("weird")) {
       System.out.println(filterName + " is not a valid filter name.\n" +
           "Valid filter names:\n" +
-          "oil1, oil3, invert, smear\n");
+          "oil1, oil3, invert, smear, weird\n");
       System.exit(0);
     }
 
@@ -130,7 +140,7 @@ public class ConcurrentImageProcessorDataParallel {
     Filter_t[] filters = new Filter_t[prodconLimit];
     Writer_t[] writers = new Writer_t[prodconLimit];
     for (int i=0; i < prodconLimit; i++) {
-        filters[i] = new Filter_t(filterName);
+        filters[i] = new Filter_t(filterName, weirdFilterThreads);
         writers[i] = new Writer_t(imagesPath);
     }
 
@@ -282,11 +292,16 @@ public class ConcurrentImageProcessorDataParallel {
 	 * name of the filter to be used
 	 */
     private final String filterName;
+    /**
+     * number of threads to use w/in the DataParallelWeirdFilter
+     */
+    private final int weirdFilterThreads;
     
     private double timeDelta = 0;
 
-    public Filter_t(String filterName) {
+    public Filter_t(String filterName, int weirdFilterThreads) {
     	this.filterName = filterName;
+    	this.weirdFilterThreads = weirdFilterThreads;
     }
 
     public void run() {
@@ -322,22 +337,26 @@ public class ConcurrentImageProcessorDataParallel {
 			        output = oilFilter(filter, input, output, range);
 			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
 
-			        outputName = "./oil" + range + "_" + outputNameSuffix;
 			    } else if (filterName.equals("invert")) {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = invertFilter(filter, input, output);
 			        processTime += (System.currentTimeMillis() - timeDelta) /1000;
 
-			        outputName = "./invert_" + outputNameSuffix;
 			    } else if (filterName.equals("smear")) {
 			        // filter and record time
 			        timeDelta = System.currentTimeMillis();
 			        output = smearFilter(filter, input, output, 10);
 			        processTime += (System.currentTimeMillis() - timeDelta) / 1000;
-
-			        outputName = "./smear_" + outputNameSuffix;
+			        
+			    } else if (filterName.equals("weird")) {
+			        // filter and record time
+			        timeDelta = System.currentTimeMillis();
+			        output = weirdFilter(filter, input, output);
+			        processTime += (System.currentTimeMillis() - timeDelta) /1000;
+			        
 			    }
+				outputName = "./"+filterName+"_"+outputNameSuffix;
 
     			// pass image onto writers
 				//System.out.println("Filter thread try acquire writer-sem.: currentImgToFilter=" + currentImgToFilter + ": " + Thread.currentThread().getId());
@@ -411,6 +430,21 @@ public class ConcurrentImageProcessorDataParallel {
 		// Apply the Smear filter
 		filter = new SmearFilter();
 		((SmearFilter)filter).setShape(shape);
+		filter.filter(input, output);
+		
+		// indicate that file has been processed
+		System.out.print("p");
+		
+		return output;
+	}
+	
+	private BufferedImage weirdFilter(BufferedImageOp filter,
+            				BufferedImage input, BufferedImage output) {
+		// init. output image
+		output = new BufferedImage(input.getWidth(), input.getHeight(), input.getType());
+		
+		// Apply the Invert filter
+		filter = new DataParallelWeirdFilter(weirdFilterThreads);
 		filter.filter(input, output);
 		
 		// indicate that file has been processed

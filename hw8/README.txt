@@ -9,11 +9,11 @@ Q1:
 How to test weird filter:
 	javac RGB.java WeirdFilter.java WeirdFilterExample.java
 	java WeirdFilterExample <path to image>
-Should then create the resulting image in the current directory under the name weird_image.jpg.
+Should then create the resulting image in the current directory under the name weird_image.jpg. Uses either the sequential or dataparallel versions of the weird filter (need to comment/uncomment the different instantiations in the WeirdFilterExample source file).
 
 
 
-Q2:
+Q2: see ConcurrentImageProcessorTaskParallel.java
 
 
 
@@ -53,6 +53,31 @@ Speedup (vs 1 thread): 57.3%
 
 
 
-Q4:
+Q4: see ConcurrentImageProcessorDataParallel.java
 
 
+
+Q5: (using single large image)
+threads 1:
+Time spent reading: 0.344 sec.
+Cumulative time spent processing: 7.95 sec.
+Cumulative spent writing: 0.319 sec.
+Overall execution time: 9.862 sec.
+
+threads 2:
+Time spent reading: 0.267 sec.
+Cumulative time spent processing: 4.383 sec.
+Cumulative spent writing: 0.332 sec.
+Overall execution time: 6.195 sec.
+
+threads 3:
+Time spent reading: 0.272 sec.
+Cumulative time spent processing: 3.77 sec.
+Cumulative spent writing: 0.33 sec.
+Overall execution time: 5.569 sec.
+
+threads 4:
+Time spent reading: 0.268 sec.
+Cumulative time spent processing: 3.371 sec.
+Cumulative spent writing: 0.339 sec.
+Overall execution time: 5.17 sec.
