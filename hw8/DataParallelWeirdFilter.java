@@ -140,8 +140,9 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
     	ExecutorService pool = Executors.newFixedThreadPool(filterers); 
     	
     	// apply weird filter to all pixels from top-left to bottom-right
-		for (int i = 0; i < inputImage.getWidth(); i++) {				
-			pool.execute(new Filter_t(i, inputImage, outputImage));
+		for (int x = 0; x < inputImage.getWidth(); x++) {
+			// delegate processing of each column of image to threads
+			pool.execute(new Filter_t(x, inputImage, outputImage));
 		}
 		
 		pool.shutdown();
@@ -180,8 +181,11 @@ public  class DataParallelWeirdFilter implements BufferedImageOp {
      * filter worker
      ********************/
     class Filter_t extends Thread {
-    	private final int x; 
+    	private final int x;
+    	
+    	// note this is a const copy, so I dont think need any sync. on the processing methods that access this var
     	private final BufferedImage inImage;
+    	
     	private BufferedImage outImage;
     	
     	public Filter_t(int x, BufferedImage inImage, BufferedImage outImage) {

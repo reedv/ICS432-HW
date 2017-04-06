@@ -108,10 +108,17 @@ public class ConcurrentImageProcessorTaskParallel {
   }
 
   public static void main(String args[]) {
-	  final int numThreads = Integer.parseInt(args[0]);
-	  ConcurrentImageProcessorTaskParallel cip_tp = 
-			  new ConcurrentImageProcessorTaskParallel(8, numThreads);
-	  cip_tp.concurrentImageProcessorTaskParallel(args);
+	  try {
+		  final int numThreads = Integer.parseInt(args[0]);
+		  ConcurrentImageProcessorTaskParallel cip_tp = 
+				  new ConcurrentImageProcessorTaskParallel(8, numThreads);
+		  cip_tp.concurrentImageProcessorTaskParallel(args);
+	  } catch (ArrayIndexOutOfBoundsException e) {
+		  e.printStackTrace();
+		  System.out.println("Usage: java -cp .:Filters.jar ConcurrentImageProcessor "
+		      		+ "<number filter threads> <filter name> <directory path>");
+	      System.exit(0);
+	  }
   }
 
   private void concurrentImageProcessorTaskParallel(String args[]) {

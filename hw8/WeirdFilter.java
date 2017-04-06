@@ -14,6 +14,7 @@ import static java.lang.Math.min;
 
 public  class WeirdFilter implements BufferedImageOp {
     
+	// assuming valid rgb ints range from 0 to 255
 	private static final int invalidRGB = -10000000;
 	
 	/**

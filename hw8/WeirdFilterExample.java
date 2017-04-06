@@ -32,8 +32,8 @@ public class WeirdFilterExample {
 		output = new BufferedImage(input.getWidth(), input.getHeight(), input.getType());  
 
 		// Apply Weird filter
-		filter = new WeirdFilter();
-		//filter = new DataParallelWeirdFilter(4);
+		//filter = new WeirdFilter();
+		filter = new DataParallelWeirdFilter(4);
 		filter.filter(input,output);
 		saveImage(output, "./weird_test_image.jpg");
 
