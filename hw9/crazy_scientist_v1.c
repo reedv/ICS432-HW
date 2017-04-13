@@ -5,6 +5,7 @@
 #include <omp.h>
 
 #define SIZE 50
+#define NUM_THREADS 2
 
 double do_crazy_computation(int i,int j);
 
@@ -18,54 +19,36 @@ int main(int argc, char **argv) {
     int i,j;
   
     #pragma omp parallel \
-        num_threads(2) \
+        num_threads(NUM_THREADS) \
         shared(mat, t0_num, t1_num, elapsed_t0, elapsed_t1) \
         private(i, j)
     {
-        #pragma omp sections
-        {
-            /*
-             Need to break up into sections to log times for each thread,
-             else could have just done 'parallel for' on outer loop to split automatically
-             */
-            #pragma omp section
-            {
-                struct timeval start_t, end_t;
-                gettimeofday(&start_t, NULL);
-                
-                for (i=0; i<SIZE/2; i++) { /* loop over the rows */
-                    for (j=0; j<SIZE; j++) {  /* loop over the columns */
-                        mat[i][j] = do_crazy_computation(i, j);
-                        //printf("Thread-%d: Processed mat[%d][%d]\n", omp_get_thread_num(), i, j);
-                        fprintf(stderr, ".");
-                    }
-                }
-                
-                gettimeofday(&end_t, NULL);
-                elapsed_t0 = ((end_t.tv_sec*1000000.0 + end_t.tv_usec) -
-                             (start_t.tv_sec*1000000.0 + start_t.tv_usec)) / 1000000.00;
-                t0_num = omp_get_thread_num();
-            }
-            
-            #pragma omp section
-            {
-                struct timeval start_t, end_t;
-                gettimeofday(&start_t, NULL);
-                
-                for (i=SIZE/2; i<SIZE; i++) { /* loop over the rows */
-                    for (j=0; j<SIZE; j++) {  /* loop over the columns */
-                        mat[i][j] = do_crazy_computation(i, j);
-                        //printf("Thread-%d: Processed mat[%d][%d]\n", omp_get_thread_num(), i, j);
-                        fprintf(stderr, ".");
-                    }
-                }
-                
-                gettimeofday(&end_t, NULL);
-                elapsed_t1 = ((end_t.tv_sec*1000000.0 + end_t.tv_usec) -
-                             (start_t.tv_sec*1000000.0 + start_t.tv_usec)) / 1000000.00;
-                t1_num = omp_get_thread_num();
-            }
+        struct timeval start_t, end_t;
+        gettimeofday(&start_t, NULL);
         
+        #pragma omp for \
+            schedule(static) \
+            nowait
+        for (i=0; i<SIZE; i++) { /* loop over the rows */
+            for (j=0; j<SIZE; j++) {  /* loop over the columns */
+                mat[i][j] = do_crazy_computation(i, j);
+                //printf("Thread-%d: Processed mat[%d][%d]\n", omp_get_thread_num(), i, j);
+                fprintf(stderr, ".");
+            }
+        }
+        
+        gettimeofday(&end_t, NULL);
+        switch (omp_get_thread_num()) {
+            case 0:
+                elapsed_t0 = ((end_t.tv_sec*1000000.0 + end_t.tv_usec) -
+                              (start_t.tv_sec*1000000.0 + start_t.tv_usec)) / 1000000.00;
+                t0_num = omp_get_thread_num();
+                break;
+            case 1:
+                elapsed_t1 = ((end_t.tv_sec*1000000.0 + end_t.tv_usec) -
+                              (start_t.tv_sec*1000000.0 + start_t.tv_usec)) / 1000000.00;
+                t1_num = omp_get_thread_num();
+                break;
         }
     }
     

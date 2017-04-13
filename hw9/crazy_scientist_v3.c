@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         gettimeofday(&start_t, NULL);
         
         #pragma omp for \
-            schedule(static) \
+            schedule(dynamic) \
             nowait
         for (i=0; i<SIZE; i++) { /* loop over the rows */
             for (j=0; j<SIZE; j++) {  /* loop over the columns */

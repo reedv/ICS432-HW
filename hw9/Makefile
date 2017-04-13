@@ -4,7 +4,7 @@ export CC = /usr/local/bin/gcc-6
 #CC = gcc
 CFLAGS= -Wall -fopenmp
 
-all: crazy_scientist crazy_scientist_v1 crazy_scientist_v2
+all: crazy_scientist crazy_scientist_v1 crazy_scientist_v2 crazy_scientist_v3
 
 crazy_scientist: crazy_scientist.c
 	$(CC) $(CFLAGS) crazy_scientist.c -o crazy_scientist.o
@@ -14,6 +14,9 @@ crazy_scientist_v1: crazy_scientist_v1.c
 
 crazy_scientist_v2: crazy_scientist_v2.c
 	$(CC) $(CFLAGS) crazy_scientist_v2.c -o crazy_scientist_v2.o
+
+crazy_scientist_v3: crazy_scientist_v3.c
+	$(CC) $(CFLAGS) crazy_scientist_v3.c -o crazy_scientist_v3.o
 
 #main.o: main.cpp
 #	$(CC) $(CFLAGS) main.cpp
