@@ -2,6 +2,9 @@ Reed Villanueva
 ICS432
 HW9
 
+Run on OSX: see top of Makefile
+Run on Linux: see top of Makefile
+
 Q1: see crazy_scientist_v1.c
 
 Q2: see crazy_scientist_v2.c
